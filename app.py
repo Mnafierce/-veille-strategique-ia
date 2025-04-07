@@ -98,10 +98,7 @@ search_keyword = st.text_input("🔍 Recherche libre", value="autonomous AI agen
 
 generate = st.button("📊 Générer le rapport stratégique")
 
-<<<<<<< HEAD
 
-=======
->>>>>>> 81a868d4b7d3a92c9138cc44d73eedb5b1674bcc
 # 🔍 Données internes
 def get_insights_data(secteur):
     return {
@@ -204,7 +201,7 @@ if generate:
         st.subheader("🗞️ Actualités – Google News")
         for n in news:
             st.markdown(f"**[{n['title']}]({n['link']})**\n> {n.get('snippet', '...')}")
-<<<<<<< HEAD
+
 
     # 📄 Analyse stratégique
     st.subheader("📌 Synthèse stratégique")
@@ -233,7 +230,7 @@ if generate:
             contenu = f"Insights : {' | '.join(insights)}"
             enregistrer_dans_notion("Rapport IA", contenu, selected_secteur, selected_entreprise)
             st.success("Rapport enregistré dans Notion ✅")
-=======
+
 
     # 📄 Analyse stratégique
     st.subheader("📌 Synthèse stratégique")
@@ -249,7 +246,7 @@ if generate:
 
     # 📊 Graphiques
     afficher_graphiques_secteur()
->>>>>>> 81a868d4b7d3a92c9138cc44d73eedb5b1674bcc
+
 
     # 📤 PDF & Notion
     st.markdown("---")
