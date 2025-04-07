@@ -240,7 +240,7 @@ if st.button("📌 Voir le plan d’action stratégique"):
     # 🤖 Analyse Salesforce
     analyse_salesforce(selected_secteur, selected_entreprise, insights)
 
-    def afficher_plan_action(secteur, entreprise):
+   def afficher_plan_action(secteur, entreprise):
     st.subheader("📌 Plan d’action stratégique")
     actions = {
         "Santé": [
@@ -261,6 +261,7 @@ if st.button("📌 Voir le plan d’action stratégique"):
     }
     for action in actions.get(secteur, ["⚠️ Analyse IA stratégique en cours."]):
         st.markdown(action)
+
 
     # 📊 Graphiques
     afficher_graphiques_secteur()
