@@ -90,6 +90,18 @@ secteurs = ["Tous", "Santé", "Finance", "Éducation", "Retail"]
 pays = ["Tous", "Canada", "États-Unis", "France", "Allemagne"]
 entreprises = ["Toutes", "Pfizer", "JP Morgan", "Mayo Clinic", "OpenAI", "Amazon", "Coursera", "Zara"]
 
+# Score IA simulé par entreprise (sur 100)
+score_ia = {
+    "Pfizer": 82,
+    "JP Morgan": 91,
+    "Mayo Clinic": 88,
+    "OpenAI": 99,
+    "Amazon": 95,
+    "Coursera": 76,
+    "Zara": 68
+}
+
+
 col1, col2, col3 = st.columns(3)
 selected_secteur = col1.selectbox("📂 Secteur", secteurs)
 selected_pays = col2.selectbox("🌍 Pays", pays)
@@ -173,6 +185,19 @@ def enregistrer_dans_notion(titre, contenu, secteur, entreprise):
 if generate:
     st.success("✅ Rapport généré avec succès")
     st.markdown("---")
+    
+    # 🧮 Score IA si mono-entreprise
+if selected_entreprise != "Toutes":
+    score = score_ia.get(selected_entreprise)
+    if score:
+        st.subheader("🧮 Score de maturité IA")
+        st.metric(label="Niveau technologique estimé", value=f"{score}/100")
+        st.progress(score / 100)
+
+# 📌 Plan d’action stratégique
+if st.button("📌 Voir le plan d’action stratégique"):
+    afficher_plan_action(selected_secteur, selected_entreprise)
+
 
     # 🔎 Données externes
     arxiv_query = f"{search_keyword} {selected_entreprise} {selected_secteur}"
@@ -214,6 +239,28 @@ if generate:
     
     # 🤖 Analyse Salesforce
     analyse_salesforce(selected_secteur, selected_entreprise, insights)
+
+    def afficher_plan_action(secteur, entreprise):
+    st.subheader("📌 Plan d’action stratégique")
+    actions = {
+        "Santé": [
+            "✅ Analyser les parcours patients et intégrer un agent IA de suivi",
+            "✅ Créer un partenariat avec une startup MedTech IA",
+            "✅ Déployer un pilote sur un cas d’usage clinique ciblé"
+        ],
+        "Finance": [
+            "✅ Intégrer un assistant IA dans l’espace client Salesforce",
+            "✅ Automatiser la détection de risque avec des agents LLM",
+            "✅ Evaluer l’impact réglementaire des IA autonomes"
+        ],
+        "Retail": [
+            "✅ Déployer un agent IA prédictif sur les tendances d’achat",
+            "✅ Analyser les comportements clients pour la personnalisation",
+            "✅ Former les équipes CRM aux outils augmentés IA"
+        ]
+    }
+    for action in actions.get(secteur, ["⚠️ Analyse IA stratégique en cours."]):
+        st.markdown(action)
 
     # 📊 Graphiques
     afficher_graphiques_secteur()
