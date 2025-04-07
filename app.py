@@ -1,7 +1,3 @@
-HEAD
-
-
-2f7934afa09d4fd37758245773ca8ae48b982530
 import streamlit as st
 from datetime import datetime
 import feedparser
@@ -11,8 +7,7 @@ import os
 import requests
 import urllib.parse
 
-
-# 🔐 Charger la clé API depuis .env
+# 🔐 Charger les variables d'environnement
 load_dotenv()
 serpapi_key = os.getenv("SERPAPI_KEY")
 
@@ -74,7 +69,7 @@ def get_insights_data(secteur, pays, entreprise):
 
     return data.get(secteur, []), pays_note, entreprise_note
 
-# 🌐 Configuration Streamlit
+# 🌐 Streamlit config
 st.set_page_config(page_title="AgentWatch IA", layout="wide")
 st.title("🧠 AgentWatch AI – Veille Stratégique IA")
 st.markdown("**Analyse des avancées en agents IA autonomes dans les secteurs stratégiques.**")
@@ -90,7 +85,6 @@ entreprises = ["Toutes", "Pfizer", "JP Morgan", "Mayo Clinic", "OpenAI", "Amazon
 selected_secteur = st.sidebar.selectbox("Secteur d'activité", secteurs)
 selected_pays = st.sidebar.selectbox("Pays", pays)
 selected_entreprise = st.sidebar.selectbox("Entreprise", entreprises)
-
 search_keyword = st.sidebar.text_input("🔍 Recherche libre (mot-clé)", value="autonomous AI agents")
 
 st.sidebar.markdown(f"🧠 Vous suivez : **{selected_secteur}** - **{selected_pays}** - **{selected_entreprise}**")
@@ -99,7 +93,6 @@ update = st.sidebar.button("🔄 Mettre à jour les infos")
 
 # 📡 Tendances générales statiques
 st.header("📡 Tendances par secteur")
-
 col1, col2 = st.columns(2)
 with col1:
     st.subheader("🏥 Santé")
@@ -108,7 +101,6 @@ with col1:
     - 🩺 **Pfizer** teste un agent IA autonome pour le suivi post-traitement.
     - 🧠 Étude Arxiv : "Autonomous Medical Agents 2025".
     """)
-
 with col2:
     st.subheader("💰 Finance")
     st.markdown("""
@@ -117,10 +109,10 @@ with col2:
     - 📈 CB Insights : +62% d'investissements IA en finance au Q1 2025.
     """)
 
-# 🔄 Sections dynamiques
+# 🔄 Requête dynamique
 if update:
 
-    # 📰 Recherches scientifiques (Arxiv)
+    # 📰 Arxiv
     st.header("📰 Recherches scientifiques (Arxiv)")
     arxiv_query = f"{search_keyword} {selected_entreprise} {selected_secteur}"
     articles = search_arxiv(query=arxiv_query)
@@ -137,21 +129,24 @@ if update:
     # 🗞️ Google News
     if selected_entreprise != "Toutes":
         st.header("🗞️ Actualités Google News – Entreprise sélectionnée")
-        news_query = f"{selected_entreprise} {search_keyword}"
-        news = get_google_news(news_query, serpapi_key)
 
-        if news:
-            for n in news:
-                st.markdown(f"### [{n['title']}]({n['link']})")
-                st.markdown(f"🕒 {n.get('date', 'Date non précisée')}")
-                st.markdown(n.get("snippet", "Pas de description disponible."))
-                st.markdown("---")
+        if not serpapi_key:
+            st.error("❌ Clé API SerpAPI manquante. Veuillez configurer dans les secrets.")
         else:
-            st.warning("Aucune actualité trouvée ou quota atteint.")
+            news_query = f"{selected_entreprise} {search_keyword}"
+            news = get_google_news(news_query, serpapi_key)
 
-    # 📄 Rapport Stratégique
+            if news:
+                for n in news:
+                    st.markdown(f"### [{n['title']}]({n['link']})")
+                    st.markdown(f"🕒 {n.get('date', 'Date non précisée')}")
+                    st.markdown(n.get("snippet", "Pas de description disponible."))
+                    st.markdown("---")
+            else:
+                st.warning("Aucune actualité trouvée ou quota atteint.")
+
+    # 📄 Rapport stratégique
     st.header("📄 Rapport Stratégique")
-
     if selected_entreprise == "Toutes":
         st.subheader("📊 Rapport multi-entreprise")
         for ent in entreprises[1:]:
@@ -178,11 +173,10 @@ if update:
 
     st.markdown(f"🕒 Rapport généré le : **{datetime.now().strftime('%d %B %Y')}**")
 
-    # 📤 Export PDF (option mono-entreprise uniquement)
+    # 📤 Export PDF (mono-entreprise uniquement)
     if selected_entreprise != "Toutes":
         if st.button("📤 Exporter ce rapport en PDF"):
             st.success("Export en cours...")
-
             insights_html = "".join(f"<li>{i}</li>" for i in insights)
             html = f"""
             <html><head><meta charset='UTF-8'></head><body>
@@ -198,10 +192,10 @@ if update:
             <p>{note_entreprise}</p>
             </body></html>
             """
-
             with st.spinner("Génération du fichier PDF..."):
                 pdfkit.from_string(html, "rapport_ia.pdf")
                 with open("rapport_ia.pdf", "rb") as f:
                     st.download_button("📥 Télécharger le PDF", f, file_name="rapport_ia.pdf")
+
 
 
