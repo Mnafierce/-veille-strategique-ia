@@ -181,6 +181,30 @@ def enregistrer_dans_notion(titre, contenu, secteur, entreprise):
         }]
     )
 
+# 📌 Plan d’action stratégique
+def afficher_plan_action(secteur, entreprise):
+    st.subheader("📌 Plan d’action stratégique")
+    actions = {
+        "Santé": [
+            "✅ Analyser les parcours patients et intégrer un agent IA de suivi",
+            "✅ Créer un partenariat avec une startup MedTech IA",
+            "✅ Déployer un pilote sur un cas d’usage clinique ciblé"
+        ],
+        "Finance": [
+            "✅ Intégrer un assistant IA dans l’espace client Salesforce",
+            "✅ Automatiser la détection de risque avec des agents LLM",
+            "✅ Evaluer l’impact réglementaire des IA autonomes"
+        ],
+        "Retail": [
+            "✅ Déployer un agent IA prédictif sur les tendances d’achat",
+            "✅ Analyser les comportements clients pour la personnalisation",
+            "✅ Former les équipes CRM aux outils augmentés IA"
+        ]
+    }
+    for action in actions.get(secteur, ["⚠️ Analyse IA stratégique en cours."]):
+        st.markdown(action)
+
+
 # ▶️ Exécution principale
 if generate:
     st.success("✅ Rapport généré avec succès")
@@ -194,9 +218,6 @@ if selected_entreprise != "Toutes":
         st.metric(label="Niveau technologique estimé", value=f"{score}/100")
         st.progress(score / 100)
 
-# 📌 Plan d’action stratégique
-if st.button("📌 Voir le plan d’action stratégique"):
-    afficher_plan_action(selected_secteur, selected_entreprise)
 
 
     # 🔎 Données externes
