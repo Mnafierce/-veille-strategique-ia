@@ -1,3 +1,4 @@
+
 import streamlit as st
 from datetime import datetime
 import feedparser
@@ -5,41 +6,69 @@ import pdfkit
 import os
 import requests
 import urllib.parse
-from dotenv import load_dotenv
 import plotly.express as px
+import pandas as pd
+import schedule
+import threading
+from dotenv import load_dotenv
+from notion_client import Client
 
-# 🔐 Load env
+# 🔐 Charger les variables d'environnement
 load_dotenv()
 serpapi_key = os.getenv("SERPAPI_KEY")
+notion_token = os.getenv("NOTION_TOKEN")
+notion_db = os.getenv("NOTION_DB_ID")
 
-st.set_page_config(page_title="AgentWatch IA", layout="wide", page_icon="🧠")
-
-# 💼 STYLE VISUEL PRO
+# 🎨 Thème Salesforce
+st.set_page_config(page_title="AgentWatch AI", layout="wide", page_icon="🤖")
 st.markdown("""
     <style>
         .main {background-color: #f4f6f9;}
-        h1, h2, h3, h4 {color: #032D60;}
-        .stButton > button {background-color: #00A1E0; color: white;}
+        h1, h2, h3 {color: #032D60;}
+        .stButton>button {background-color: #00A1E0; color: white;}
     </style>
 """, unsafe_allow_html=True)
 
-# 📡 Simulation de cache de données (refresh toutes les 2h)
-@st.cache_data(ttl=7200)
+# ⏱ Rafraîchissement automatique
+def schedule_job():
+    schedule.every(2).hours.do(lambda: print("🔁 Données mises à jour."))
+    while True:
+        schedule.run_pending()
+
+threading.Thread(target=schedule_job, daemon=True).start()
+
+# 🔍 Recherche Arxiv
 def search_arxiv(query="autonomous AI agents", max_results=5):
     base_url = "http://export.arxiv.org/api/query?"
     encoded_query = urllib.parse.quote(query)
     query_url = f"search_query=all:{encoded_query}&start=0&max_results={max_results}&sortBy=lastUpdatedDate&sortOrder=descending"
     feed = feedparser.parse(base_url + query_url)
-    results = []
-    for entry in feed.entries:
-        results.append({
-            "title": entry.title,
-            "summary": entry.summary,
-            "link": entry.link,
-            "published": entry.published
-        })
-    return results
+    return [{
+        "title": e.title,
+        "summary": e.summary,
+        "link": e.link,
+        "published": e.published
+    } for e in feed.entries]
 
+# 🔬 PubMed API
+def search_pubmed(query="AI agents healthcare", max_results=3):
+    ids = requests.get("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi", params={
+        "db": "pubmed", "term": query, "retmode": "json", "retmax": max_results
+    }).json().get("esearchresult", {}).get("idlist", [])
+    articles = []
+    for pmid in ids:
+        r = requests.get("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi", params={
+            "db": "pubmed", "id": pmid, "retmode": "json"
+        }).json()
+        doc = r["result"].get(pmid, {})
+        articles.append({
+            "title": doc.get("title"),
+            "source": doc.get("source"),
+            "link": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+        })
+    return articles
+
+# 📰 Google News via SerpAPI
 def get_google_news(query, api_key, max_results=5):
     url = "https://serpapi.com/search"
     params = {
@@ -49,134 +78,154 @@ def get_google_news(query, api_key, max_results=5):
         "api_key": api_key,
         "num": max_results
     }
-    response = requests.get(url, params=params)
-    if response.status_code == 200:
-        return response.json().get("news_results", [])
-    return []
+    r = requests.get(url, params=params)
+    return r.json().get("news_results", []) if r.status_code == 200 else []
 
-def get_insights_data(secteur, pays, entreprise):
-    data = {
-        "Santé": [
-            "Pfizer investit dans des agents IA pour le suivi post-opératoire.",
-            "Mayo Clinic pilote un programme IA pour le tri des patients chroniques."
-        ],
-        "Finance": [
-            "JP Morgan lance un assistant IA pour la gestion de portefeuille.",
-            "Goldman Sachs utilise des IA pour la détection de fraude en temps réel."
-        ],
-        "Éducation": [
-            "Coursera explore l'usage d'agents IA pour le tutorat personnalisé.",
-            "EdTech startups lèvent 200M$ pour intégrer IA dans l’apprentissage adaptatif."
-        ],
-        "Retail": [
-            "Amazon expérimente des agents IA autonomes dans la gestion de stock.",
-            "Zara intègre un agent IA de prédiction de tendances de mode."
-        ]
-    }
 
-    pays_note = f"📍 Activités IA repérées en **{pays}**" if pays != "Tous" else ""
-    entreprise_note = f"🔎 Focus sur **{entreprise}**" if entreprise != "Toutes" else ""
+# 🎛️ Interface - Filtres
+st.title("🧠 AgentWatch AI – Veille Stratégique")
+st.markdown("**Analyse des opportunités d'agents IA externes dans la santé, la finance et la technologie.**")
 
-    return data.get(secteur, []), pays_note, entreprise_note
-
-# 🎛️ FILTRES
-st.sidebar.header("🎛️ Filtres")
 secteurs = ["Tous", "Santé", "Finance", "Éducation", "Retail"]
 pays = ["Tous", "Canada", "États-Unis", "France", "Allemagne"]
 entreprises = ["Toutes", "Pfizer", "JP Morgan", "Mayo Clinic", "OpenAI", "Amazon", "Coursera", "Zara"]
 
-selected_secteur = st.sidebar.selectbox("Secteur d'activité", secteurs)
-selected_pays = st.sidebar.selectbox("Pays", pays)
-selected_entreprise = st.sidebar.selectbox("Entreprise", entreprises)
-search_keyword = st.sidebar.text_input("🔍 Mot-clé libre", "autonomous AI agents")
-
-# 📊 Bouton principal
-generate = st.button("📊 Générer le rapport")
-
-# 📈 Indicateurs
-st.header("📈 Indicateurs stratégiques")
 col1, col2, col3 = st.columns(3)
-with col1:
-    st.metric("💰 Investissements IA", "620M$", "+14%")
-with col2:
-    st.metric("🤖 Agents autonomes", "42 projets", "+7 ce mois")
-with col3:
-    st.metric("🌍 Pays impliqués", "5+", "")
+selected_secteur = col1.selectbox("📂 Secteur", secteurs)
+selected_pays = col2.selectbox("🌍 Pays", pays)
+selected_entreprise = col3.selectbox("🏢 Entreprise", entreprises)
+search_keyword = st.text_input("🔍 Recherche libre", value="autonomous AI agents")
 
-df = {
-    "Mois": ["Jan", "Fév", "Mars", "Avr"],
-    "Santé": [10, 12, 15, 18],
-    "Finance": [8, 9, 14, 17]
-}
-fig = px.line(df, x="Mois", y=["Santé", "Finance"], title="Évolution des projets IA")
-st.plotly_chart(fig, use_container_width=True)
+generate = st.button("📊 Générer le rapport stratégique")
 
-# RAPPORT
+# 🔍 Données internes
+def get_insights_data(secteur):
+    return {
+        "Santé": ["Pfizer développe un agent IA post-op.", "Mayo Clinic teste un triage autonome."],
+        "Finance": ["JP Morgan développe un conseiller IA.", "Goldman Sachs automatise la détection de fraude."],
+        "Retail": ["Amazon teste IA logistique.", "Zara utilise IA pour prévisions de mode."]
+    }.get(secteur, [])
+
+# 🧠 Analyse stratégique & recommandation Salesforce
+def analyse_salesforce(secteur, entreprise, insights):
+    reco = {
+        "Santé": "Créer un agent Salesforce HealthCloud pour suivi post-chirurgical.",
+        "Finance": "Déployer un assistant IA Einstein pour scoring de portefeuille.",
+        "Retail": "Connecter IA de prévision de tendance à Salesforce Commerce Cloud."
+    }
+    st.markdown("### 🧠 Recommandation stratégique Salesforce")
+    st.info(f"""
+**Secteur :** {secteur} | **Entreprise :** {entreprise}  
+**Insight détecté :** {insights[0] if insights else "N/A"}  
+**Recommandation :** {reco.get(secteur, "Explorer les cas IA applicables au CRM.")}  
+    """)
+
+# 📊 Visualisation dynamique
+def afficher_graphiques_secteur():
+    st.subheader("📈 Statistiques par secteur")
+    df = pd.DataFrame({
+        "Mois": ["Jan", "Fév", "Mars", "Avr"],
+        "Santé": [10, 14, 18, 22],
+        "Finance": [8, 10, 14, 19]
+    })
+    fig = px.line(df, x="Mois", y=["Santé", "Finance"], title="Évolution des projets IA", markers=True)
+    st.plotly_chart(fig, use_container_width=True)
+
+    pie = px.pie(names=["Agent diagnostic", "NLP", "Support client", "Investissement", "Prévision"], 
+                 values=[20, 25, 15, 30, 10],
+                 title="Répartition des types d’agents IA observés")
+    st.plotly_chart(pie, use_container_width=True)
+
+# 📄 PDF Export
+def export_pdf(secteur, entreprise, insights):
+    html = f"""
+    <html><head><meta charset='UTF-8'></head><body>
+    <h1>Rapport Stratégique IA</h1>
+    <p><strong>Secteur :</strong> {secteur}</p>
+    <p><strong>Entreprise :</strong> {entreprise}</p>
+    <p><strong>Date :</strong> {datetime.now().strftime('%d %B %Y')}</p>
+    <ul>{''.join(f"<li>{i}</li>" for i in insights)}</ul>
+    </body></html>
+    """
+    pdfkit.from_string(html, "rapport_ia.pdf")
+    with open("rapport_ia.pdf", "rb") as f:
+        st.download_button("📥 Télécharger le rapport PDF", f, file_name="rapport_ia.pdf")
+
+# 📤 Notion
+def enregistrer_dans_notion(titre, contenu, secteur, entreprise):
+    notion = Client(auth=notion_token)
+    notion.pages.create(
+        parent={"database_id": notion_db},
+        properties={
+            "Nom": {"title": [{"text": {"content": titre}}]},
+            "Secteur": {"rich_text": [{"text": {"content": secteur}}]},
+            "Entreprise": {"rich_text": [{"text": {"content": entreprise}}]},
+            "Date": {"date": {"start": datetime.now().isoformat()}}
+        },
+        children=[{
+            "object": "block", "type": "paragraph",
+            "paragraph": {"text": [{"type": "text", "text": {"content": contenu}}]}
+        }]
+    )
+
+# ▶️ Exécution principale
 if generate:
-    st.success("✅ Rapport généré avec succès !")
+    st.success("✅ Rapport généré avec succès")
+    st.markdown("---")
 
-    st.header("🧠 Résultats stratégiques")
+    # 🔎 Données externes
     arxiv_query = f"{search_keyword} {selected_entreprise} {selected_secteur}"
     articles = search_arxiv(arxiv_query)
+    pubmed = search_pubmed(f"{search_keyword} {selected_secteur}")
+    news = get_google_news(f"{selected_entreprise} {search_keyword}", serpapi_key) if selected_entreprise != "Toutes" else []
 
+    # 🔬 Affichage Arxiv
+    st.subheader("📚 Études scientifiques – Arxiv")
     if articles:
-        with st.expander("🔬 Recherches Arxiv"):
-            for article in articles:
-                st.markdown(f"### [{article['title']}]({article['link']})")
-                st.caption(f"📅 {article['published']}")
-                st.markdown(article['summary'][:400] + "...")
-                st.markdown("---")
-
-    if selected_entreprise != "Toutes":
-        with st.expander("🗞️ Google News – Actualités récentes"):
-            if not serpapi_key:
-                st.error("Clé API SerpAPI manquante.")
-            else:
-                news = get_google_news(f"{selected_entreprise} {search_keyword}", serpapi_key)
-                if news:
-                    for n in news:
-                        st.markdown(f"### [{n['title']}]({n['link']})")
-                        st.caption(f"🕒 {n.get('date', 'Date non précisée')}")
-                        st.markdown(n.get("snippet", "..."))
-                        st.markdown("---")
-                else:
-                    st.warning("Aucune actualité trouvée.")
-
-    st.subheader("📄 Synthèse par secteur")
-    if selected_entreprise == "Toutes":
-        for ent in entreprises[1:]:
-            st.markdown(f"### 🔹 {ent}")
-            insights, _, _ = get_insights_data(selected_secteur, selected_pays, ent)
-            for i in insights:
-                st.markdown(f"- {i}")
-            st.markdown("---")
+        for a in articles:
+            st.markdown(f"**[{a['title']}]({a['link']})**\n> {a['published']}\n\n{a['summary'][:300]}...")
     else:
-        insights, note_pays, note_entreprise = get_insights_data(selected_secteur, selected_pays, selected_entreprise)
+        st.info("Aucune publication Arxiv trouvée.")
+
+    # 🔬 Affichage PubMed
+    st.subheader("🧬 Recherches médicales – PubMed")
+    if pubmed:
+        for p in pubmed:
+            st.markdown(f"🔗 [{p['title']}]({p['link']}) – _{p['source']}_")
+    else:
+        st.info("Aucune donnée PubMed trouvée.")
+
+    # 🗞️ Actualités Google
+    if news:
+        st.subheader("🗞️ Actualités – Google News")
+        for n in news:
+            st.markdown(f"**[{n['title']}]({n['link']})**\n> {n.get('snippet', '...')}")
+
+    # 📄 Analyse stratégique
+    st.subheader("📌 Synthèse stratégique")
+    insights = get_insights_data(selected_secteur)
+    if insights:
         for i in insights:
             st.markdown(f"- {i}")
-        st.markdown(note_pays)
-        st.markdown(note_entreprise)
+    else:
+        st.warning("Aucun insight détecté.")
+    
+    # 🤖 Analyse Salesforce
+    analyse_salesforce(selected_secteur, selected_entreprise, insights)
 
-    st.markdown(f"🕒 Rapport généré le : **{datetime.now().strftime('%d %B %Y')}**")
+    # 📊 Graphiques
+    afficher_graphiques_secteur()
 
-    # 📤 PDF EXPORT
-    if st.button("📥 Télécharger ce rapport en PDF"):
-        insights_html = "".join(f"<li>{i}</li>" for i in insights)
-        html = f"""
-        <html><head><meta charset='UTF-8'></head><body>
-        <h1>Rapport IA – {selected_entreprise}</h1>
-        <p><strong>Secteur :</strong> {selected_secteur}</p>
-        <p><strong>Pays :</strong> {selected_pays}</p>
-        <p><strong>Date :</strong> {datetime.now().strftime('%d %B %Y')}</p>
-        <h2>🧠 Informations clés</h2>
-        <ul>{insights_html}</ul>
-        <p>{note_pays}</p><p>{note_entreprise}</p>
-        </body></html>
-        """
-        pdfkit.from_string(html, "rapport_ia.pdf")
-        with open("rapport_ia.pdf", "rb") as f:
-            st.download_button("📄 Télécharger le PDF", f, file_name="rapport_ia.pdf")
+    # 📤 PDF & Notion
+    st.markdown("---")
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("📥 Télécharger le rapport en PDF"):
+            export_pdf(selected_secteur, selected_entreprise, insights)
 
-
-
+    with col2:
+        if st.button("🗃 Enregistrer dans Notion"):
+            contenu = f"Insights : {' | '.join(insights)}"
+            enregistrer_dans_notion("Rapport IA", contenu, selected_secteur, selected_entreprise)
+            st.success("Rapport enregistré dans Notion ✅")
 
