@@ -416,14 +416,23 @@ def get_insights_data(secteur, pays, entreprise):
 
     return data.get(secteur, []), pays_note, entreprise_note
 
+# 📄 Rapport Stratégique
+st.header("📄 Rapport Stratégique")
+
+# ⬅️ Cette ligne est essentielle pour initialiser insights avant de l'utiliser
+insights, note_pays, note_entreprise = get_insights_data(selected_secteur, selected_pays, selected_entreprise)
+
 st.markdown(f"### 📌 Rapport – {selected_entreprise}")
+
 if insights:
     for i in insights:
         st.markdown(f"- {i}")
 else:
     st.warning("Aucune donnée disponible.")
+
 if note_pays:
     st.markdown(note_pays)
+
 if note_entreprise:
     st.markdown(note_entreprise)
 
