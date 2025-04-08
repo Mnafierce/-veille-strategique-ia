@@ -152,8 +152,8 @@ with col2:
 
 st.caption(f"⏱ Données actualisées le : {tendances_ia['last_update']}")
 
-# 🔬 Analyse des publications scientifiques (Arxiv)
-    for article in articles:
+    # 🔬 Analyse des publications scientifiques (Arxiv)
+for article in articles:
         summary = article.get("summary", "").lower()
 
         if secteur == "Santé":
@@ -169,7 +169,7 @@ st.caption(f"⏱ Données actualisées le : {tendances_ia['last_update']}")
                 recommandations.append("🤖 Étudier l’intégration d’agents autonomes dans les processus de scoring.")
 
     # 🗞️ Analyse optionnelle des actualités
-    for article in news:
+for article in news:
         snippet = article.get("snippet", "").lower()
 
         if secteur == "Santé" and "ai" in snippet and "patient" in snippet:
