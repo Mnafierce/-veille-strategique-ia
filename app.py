@@ -204,13 +204,13 @@ if update:
     news = get_google_news(f"{selected_entreprise} {search_keyword}", serpapi_key)
 
     st.header("📚 Études scientifiques (Arxiv)")
-        if articles:
-            for article in articles:
+    if articles:
+        for article in articles:
                 st.markdown(f"### [{article['title']}]({article['link']})")
                 st.markdown(f"📅 {article['published']}")
                 st.markdown(article['summary'][:400] + "...")
-        else:
-            st.info("Aucune étude Arxiv trouvée.")
+    else:
+        st.info("Aucune étude Arxiv trouvée.")
 
     # 📰 Recherches scientifiques (Arxiv)
     st.header("📰 Recherches scientifiques (Arxiv)")
