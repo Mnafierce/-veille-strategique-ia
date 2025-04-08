@@ -359,33 +359,20 @@ def afficher_graphiques_secteur():
     for action in actions.get(secteur, ["⚠️ Analyse IA stratégique en cours."]):
         st.markdown(action)
 
+
 # 📄 Rapport Stratégique
-    st.header("📄 Rapport Stratégique")
-
-if selected_entreprise == "Toutes":
-    st.subheader("📊 Rapport multi-entreprise")
-
-    for ent in entreprises[1:]:  # on saute "Toutes"
-        st.markdown(f"### 🔹 {ent}")
-        insights, _, _ = get_insights_data(selected_secteur, selected_pays, ent)
-        if insights:
-            for i in insights:
-                st.markdown(f"- {i}")
-        else:
-            st.markdown("_Aucune donnée disponible._")
-        st.markdown("---")
+st.header("📄 Rapport Stratégique")
+insights, note_pays, note_entreprise = get_insights_data(selected_secteur, selected_pays, selected_entreprise)
+st.markdown(f"### 📌 Rapport – {selected_entreprise}")
+if insights:
+    for i in insights:
+        st.markdown(f"- {i}")
 else:
-    insights, note_pays, note_entreprise = get_insights_data(selected_secteur, selected_pays, selected_entreprise)
-    st.markdown(f"### 📌 Rapport – {selected_entreprise}")
-    if insights:
-        for i in insights:
-            st.markdown(f"- {i}")
-    else:
-        st.warning("Aucune donnée disponible.")
-    if note_pays:
-        st.markdown(note_pays)
-    if note_entreprise:
-        st.markdown(note_entreprise)
+    st.warning("Aucune donnée disponible.")
+if note_pays:
+    st.markdown(note_pays)
+if note_entreprise:
+    st.markdown(note_entreprise)
 
 st.markdown(f"🕒 Rapport généré le : **{datetime.now().strftime('%d %B %Y')}**")
 
