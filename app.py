@@ -167,9 +167,6 @@ if generate:
     st.success("✅ Rapport généré avec succès")
     st.markdown("---")
 
-    # 📌 Plan d’action stratégique
-    afficher_plan_action(secteur, entreprise)
-
     if selected_entreprise != "Toutes":
         score = score_ia.get(selected_entreprise)
         if score:
