@@ -166,8 +166,9 @@ generate = st.sidebar.button("📊 Générer le rapport stratégique")
 if generate:
     st.success("✅ Rapport généré avec succès")
     st.markdown("---")
-    # ✅ Plan d’action
-afficher_plan_action(selected_secteur, selected_entreprise)
+
+    # ✅ Plan d’action (⚠️ devait être indenté ici)
+    afficher_plan_action(selected_secteur, selected_entreprise)
 
     if selected_entreprise != "Toutes":
         score = score_ia.get(selected_entreprise)
@@ -175,6 +176,7 @@ afficher_plan_action(selected_secteur, selected_entreprise)
             st.subheader("🧮 Score de maturité IA")
             st.metric(label="Niveau technologique estimé", value=f"{score}/100")
             st.progress(score / 100)
+
 
     # 🔎 Données externes
     arxiv_query = f"{search_keyword} {selected_entreprise} {selected_secteur}"
