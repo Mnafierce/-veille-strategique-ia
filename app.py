@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as st 
 from datetime import datetime
 import feedparser
 import pdfkit
@@ -158,9 +158,7 @@ selected_pays = st.sidebar.selectbox("🌍 Pays", pays)
 selected_entreprise = st.sidebar.selectbox("🏢 Entreprise", entreprises)
 search_keyword = st.sidebar.text_input("🔍 Recherche libre", value="autonomous AI agents")
 
-# Bouton pour déclencher le rapport
 generate = st.sidebar.button("📊 Générer le rapport stratégique")
-
 
 # ▶️ Lancement du rapport stratégique
 if generate:
@@ -168,42 +166,21 @@ if generate:
     st.markdown("---")
 
     if selected_entreprise != "Toutes":
+        score_ia = {
+            "Pfizer": 82,
+            "JP Morgan": 91,
+            "Mayo Clinic": 88,
+            "OpenAI": 99,
+            "Amazon": 95,
+            "Coursera": 76,
+            "Zara": 68
+        }
         score = score_ia.get(selected_entreprise)
         if score:
             st.subheader("🧮 Score de maturité IA")
             st.metric(label="Niveau technologique estimé", value=f"{score}/100")
             st.progress(score / 100)
 
-
-    # 🔎 Données externes
-    arxiv_query = f"{search_keyword} {selected_entreprise} {selected_secteur}"
-    articles = search_arxiv(arxiv_query)
-    pubmed = search_pubmed(f"{search_keyword} {selected_secteur}")
-    news = get_google_news(f"{selected_entreprise} {search_keyword}", serpapi_key) if selected_entreprise != "Toutes" else []
-
-    # 📚 Arxiv
-    st.subheader("📚 Études scientifiques – Arxiv")
-    if articles:
-        for a in articles:
-            st.markdown(f"**[{a['title']}]({a['link']})**\n> {a['published']}\n\n{a['summary'][:300]}...")
-    else:
-        st.info("Aucune publication Arxiv trouvée.")
-
-    # 🔬 PubMed
-    st.subheader("🧬 Recherches médicales – PubMed")
-    if pubmed:
-        for p in pubmed:
-            st.markdown(f"🔗 [{p['title']}]({p['link']}) – _{p['source']}_")
-    else:
-        st.info("Aucune donnée PubMed trouvée.")
-
-    # 🗞️ Google News
-    if news:
-        st.subheader("🗞️ Actualités – Google News")
-        for n in news:
-            st.markdown(f"**[{n['title']}]({n['link']})**\n> {n.get('snippet', '...')}")
-
-    # 📌 Analyse stratégique
     st.subheader("📌 Synthèse stratégique")
     insights = get_insights_data(selected_secteur)
     if insights:
@@ -212,13 +189,10 @@ if generate:
     else:
         st.warning("Aucun insight détecté.")
 
-    # 🧠 Salesforce
     analyse_salesforce(selected_secteur, selected_entreprise, insights)
-
-    # 📈 Graphiques
     afficher_graphiques_secteur()
+    afficher_plan_action(selected_secteur, selected_entreprise)
 
-    # 📥 PDF & Notion
     st.markdown("---")
     col1, col2 = st.columns(2)
     with col1:
@@ -232,5 +206,5 @@ if generate:
             st.success("Rapport enregistré dans Notion ✅")
 
 # ✅ Footer
-    st.markdown("---")
-    st.markdown("🧠 *Propulsé par AgentWatch AI — Salesforce Strategy Pilot v1.0*")
+st.markdown("---")
+st.markdown("🧠 *Propulsé par AgentWatch AI — Salesforce Strategy Pilot v1.0*")
