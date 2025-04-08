@@ -13,12 +13,12 @@ import time
 from dotenv import load_dotenv
 from notion_client import Client
 
-
 # 🔐 Charger la clé API depuis .env
 load_dotenv()
 serpapi_key = os.getenv("SERPAPI_KEY")
+notion_token = os.getenv("NOTION_TOKEN")
+notion_db = os.getenv("NOTION_DB_ID")
 
-# 🎨 Thème Salesforce
 st.set_page_config(page_title="AgentWatch AI", layout="wide", page_icon="🤖")
 st.markdown("""
     <style>
@@ -28,9 +28,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 🌐 Configuration Streamlit
 st.title("🧠 AgentWatch AI – Veille Stratégique IA")
-st.markdown("**Analyse des avancées en agents IA autonomes dans les secteurs stratégiques.**")
+st.markdown("**Analyse des avancées en agents IA autonomes dans la santé et la finance.**")
 
 # 🔐 Charger les variables d'environnement
 load_dotenv()
@@ -44,8 +43,21 @@ def schedule_job():
     while True:
         schedule.run_pending()
         time.sleep(1)
-
 threading.Thread(target=schedule_job, daemon=True).start()
+
+# Filtre utilisateur (sidebar)
+st.sidebar.markdown(f"📅 **Dernière mise à jour :** {datetime.now().strftime('%d %B %Y')}")
+st.sidebar.header("🎛️ Filtres")
+
+secteurs = ["Santé", "Finance"]
+pays = ["Tous", "Canada", "États-Unis", "France", "Allemagne"]
+entreprises = ["Toutes", "Pfizer", "JP Morgan", "Mayo Clinic", "OpenAI", "Amazon"]
+
+selected_secteur = st.sidebar.selectbox("📂 Secteur", secteurs)
+selected_pays = st.sidebar.selectbox("🌍 Pays", pays)
+selected_entreprise = st.sidebar.selectbox("🏢 Entreprise", entreprises)
+search_keyword = st.sidebar.text_input("🔍 Recherche libre", value="autonomous AI agents")
+update = st.sidebar.button("🔄 Mettre à jour les infos")
 
 # 🔎 Google News via SerpAPI
 def get_google_news(query, api_key, max_results=5):
@@ -69,15 +81,14 @@ def search_arxiv(query="autonomous AI agents", max_results=5):
     encoded_query = urllib.parse.quote(query)
     query_url = f"search_query=all:{encoded_query}&start=0&max_results={max_results}&sortBy=lastUpdatedDate&sortOrder=descending"
     feed = feedparser.parse(base_url + query_url)
-    results = []
-    for entry in feed.entries:
-        results.append({
-            "title": entry.title,
-            "summary": entry.summary,
-            "link": entry.link,
-            "published": entry.published
-        })
-    return results
+    return [{"title": e.title, "summary": e.summary, "link": e.link, "published": e.published} for e in feed.entries]
+
+def get_google_news(query, api_key, max_results=5):
+    response = requests.get("https://serpapi.com/search", params={
+        "engine": "google", "q": query, "tbm": "nws", "api_key": api_key, "num": max_results
+    })
+    return response.json().get("news_results", []) if response.status_code == 200 else []
+
 
 # 🔍 analyse_salesforce
 def analyse_salesforce(secteur, entreprise, insights, articles, news):
@@ -85,7 +96,8 @@ def analyse_salesforce(secteur, entreprise, insights, articles, news):
 
     recommandations = []
 
-    # 🔍 Analyse des insights internes
+# 🔍 Analyse des insights internes
+def get_insights_data:
     for insight in insights:
         insight_lower = insight.lower()
         if secteur == "Santé":
@@ -97,7 +109,7 @@ def analyse_salesforce(secteur, entreprise, insights, articles, news):
             if "fraude" in insight_lower:
                 recommandations.append("Utiliser Einstein GPT pour la détection intelligente de fraude.")
 
-    # 🔬 Analyse des publications scientifiques (Arxiv)
+ # 🔬 Analyse des publications scientifiques (Arxiv)
     for article in articles:
         summary = article.get("summary", "").lower()
         if secteur == "Santé":
@@ -111,7 +123,7 @@ def analyse_salesforce(secteur, entreprise, insights, articles, news):
             if "autonomous agent" in summary:
                 recommandations.append("Explorer les agents autonomes pour l’automatisation des processus de scoring.")
 
-    # 🗞️ Analyse optionnelle des actualités
+# 🗞️ Analyse optionnelle des actualités
     for article in news:
         snippet = article.get("snippet", "").lower()
         if secteur == "Santé" and "ai" in snippet and "patient" in snippet:
@@ -119,7 +131,7 @@ def analyse_salesforce(secteur, entreprise, insights, articles, news):
         elif secteur == "Finance" and "investment" in snippet:
             recommandations.append("Étendre Salesforce avec une IA d’analyse des comportements d’investissement.")
     
-    # 🔎 Analyse des études Arxiv
+# 🔎 Analyse des études Arxiv
     for article in articles:
         summary = article["summary"].lower()
         if secteur == "Santé":
@@ -133,31 +145,14 @@ def analyse_salesforce(secteur, entreprise, insights, articles, news):
             if "autonomous agent" in summary:
                 recommandations.append("Étudier l'intégration d'agents autonomes dans les processus de scoring.")
 
-    # 🧠 Synthèse ou fallback
+
+# 🧠 Synthèse ou fallback
     if not recommandations:
         recommandations.append("Explorer des cas d’intégration IA récents dans l’environnement Salesforce.")
 
     for reco in recommandations:
         st.info(f"💡 {reco}")
 
-
-# 🎛️ Filtres
-st.sidebar.markdown(f"📅 **Dernière mise à jour :** {datetime.now().strftime('%d %B %Y')}")
-st.sidebar.header("🎛️ Filtres")
-
-secteurs = ["Tous", "Santé", "Finance"]
-pays = ["Tous", "Canada", "États-Unis", "France", "Allemagne"]
-entreprises = ["Toutes", "Pfizer", "JP Morgan", "Mayo Clinic", "OpenAI", "Amazon", "Coursera", "Zara"]
-
-selected_secteur = st.sidebar.selectbox("Secteur d'activité", secteurs)
-selected_pays = st.sidebar.selectbox("Pays", pays)
-selected_entreprise = st.sidebar.selectbox("Entreprise", entreprises)
-
-search_keyword = st.sidebar.text_input("🔍 Recherche libre (mot-clé)", value="autonomous AI agents")
-
-st.sidebar.markdown(f"🧠 Vous suivez : **{selected_secteur}** - **{selected_pays}** - **{selected_entreprise}**")
-st.sidebar.markdown("---")
-update = st.sidebar.button("🔄 Mettre à jour les infos")
 
 # 📡 Tendances générales statiques
 st.header("📡 Tendances par secteur")
@@ -183,6 +178,18 @@ with col2:
 if update:
     # Avant : analyse_salesforce(...)
     analyse_salesforce(selected_secteur, selected_entreprise, insights, articles, news)
+    arxiv_query = f"{search_keyword} {selected_entreprise} {selected_secteur}"
+    articles = search_arxiv(arxiv_query)
+    news = get_google_news(f"{selected_entreprise} {search_keyword}", serpapi_key)
+
+    st.header("📚 Études scientifiques (Arxiv)")
+        if articles:
+            for article in articles:
+                st.markdown(f"### [{article['title']}]({article['link']})")
+                st.markdown(f"📅 {article['published']}")
+                st.markdown(article['summary'][:400] + "...")
+        else:
+            st.info("Aucune étude Arxiv trouvée.")
 
     # 📰 Recherches scientifiques (Arxiv)
     st.header("📰 Recherches scientifiques (Arxiv)")
@@ -200,32 +207,25 @@ if update:
 
     # 🗞️ Google News
     if selected_entreprise != "Toutes":
-        st.header("🗞️ Actualités Google News – Entreprise sélectionnée")
-        news_query = f"{selected_entreprise} {search_keyword}"
-        news = get_google_news(news_query, serpapi_key)
+         st.header("🗞️ Actualités Google News")
+    if news:
+        for item in news:
+            st.markdown(f"### [{item['title']}]({item['link']})")
+            st.markdown(item.get("snippet", "Pas de description"))
+    else:
+        st.warning("Pas d’actualités récentes.")
 
-        if news:
-            for n in news:
-                st.markdown(f"### [{n['title']}]({n['link']})")
-                st.markdown(f"🕒 {n.get('date', 'Date non précisée')}")
-                st.markdown(n.get("snippet", "Pas de description disponible."))
-                st.markdown("---")
-        else:
-            st.warning("Aucune actualité trouvée ou quota atteint.")
+    insights, note_pays, note_entreprise = get_insights_data(selected_secteur, selected_pays, selected_entreprise)
+
 
     # 📄 Rapport Stratégique
     st.header("📄 Rapport Stratégique")
-        insights, note_pays, note_entreprise = get_insights_data(selected_secteur, selected_pays, selected_entreprise)
-        st.markdown(f"### 📌 Rapport – {selected_entreprise}")
-        if insights:
-            for i in insights:
-                st.markdown(f"- {i}")
-        else:
-            st.warning("Aucune donnée disponible.")
-        if note_pays:
-            st.markdown(note_pays)
-        if note_entreprise:
-            st.markdown(note_entreprise)
+    for i in insights:
+        st.markdown(f"- {i}")
+    if note_pays: st.markdown(note_pays)
+    if note_entreprise: st.markdown(note_entreprise)
+
+    analyse_salesforce(selected_secteur, selected_entreprise, insights, articles, news)
 
     st.markdown(f"🕒 Rapport généré le : **{datetime.now().strftime('%d %B %Y')}**")
 
@@ -299,19 +299,35 @@ if update:
 
 
 # 🧠 Recommandation stratégique Salesforce
-def analyse_salesforce(secteur, entreprise, insights):
-    reco = {
-        "Santé": "Créer un agent Salesforce HealthCloud pour suivi post-chirurgical.",
-        "Finance": "Déployer un assistant IA Einstein pour scoring de portefeuille.",
-        "Retail": "Connecter IA de prévision de tendance à Salesforce Commerce Cloud.",
-        "Éducation": "Intégrer un chatbot IA dans Salesforce Education Cloud."
-    }
+def analyse_salesforce(secteur, entreprise, insights, articles, news):
     st.markdown("### 🧠 Recommandation stratégique Salesforce")
-    st.info(f"""
-**Secteur :** {secteur} | **Entreprise :** {entreprise}  
-**Insight détecté :** {insights[0] if insights else "N/A"}  
-**Recommandation :** {reco.get(secteur, "Explorer les cas IA applicables au CRM.")}  
-    """)
+    recommandations = []
+
+    for insight in insights:
+        if secteur == "Santé" and ("suivi" in insight.lower() or "tri" in insight.lower()):
+            recommandations.append("Déployer un agent IA dans Salesforce HealthCloud.")
+        if secteur == "Finance" and "portefeuille" in insight.lower():
+            recommandations.append("Intégrer un assistant IA dans Financial Services Cloud.")
+
+    for article in articles:
+        s = article["summary"].lower()
+        if secteur == "Santé" and "diagnostic" in s:
+            recommandations.append("Créer un outil IA pour l’aide au diagnostic dans Salesforce.")
+        if secteur == "Finance" and ("forecast" in s or "risk" in s):
+            recommandations.append("Ajouter un modèle prédictif de risque dans Financial Cloud.")
+
+    for n in news:
+        snip = n.get("snippet", "").lower()
+        if secteur == "Santé" and "ai" in snip and "patient" in snip:
+            recommandations.append("Développer un agent conversationnel patient dans HealthCloud.")
+        if secteur == "Finance" and "investment" in snip:
+            recommandations.append("Ajouter une IA de scoring d'investissement dans Salesforce.")
+
+    if not recommandations:
+        recommandations.append("Explorer des cas d’intégration IA récents dans Salesforce.")
+
+    for reco in recommandations:
+        st.info(f"💡 {reco}")
 
 # 📊 Visualisations dynamiques
 def afficher_graphiques_secteur():
@@ -376,7 +392,6 @@ if note_entreprise:
 
 st.markdown(f"🕒 Rapport généré le : **{datetime.now().strftime('%d %B %Y')}**")
 
-
 # 📤 Export PDF sécurisé
 def export_pdf(secteur, entreprise, insights):
     try:
@@ -416,18 +431,6 @@ def enregistrer_dans_notion(titre, contenu, secteur, entreprise):
         }]
     )
 
-# 🎛️ Interface - Filtres utilisateurs
-st.sidebar.header("🎛️ Filtres de veille stratégique")
-secteurs = ["Tous", "Santé", "Finance", "Éducation", "Retail"]
-pays = ["Tous", "Canada", "États-Unis", "France", "Allemagne"]
-entreprises = ["Toutes", "Pfizer", "JP Morgan", "Mayo Clinic", "OpenAI", "Amazon", "Coursera", "Zara"]
-
-selected_secteur = st.sidebar.selectbox("📂 Secteur", secteurs)
-selected_pays = st.sidebar.selectbox("🌍 Pays", pays)
-selected_entreprise = st.sidebar.selectbox("🏢 Entreprise", entreprises)
-search_keyword = st.sidebar.text_input("🔍 Recherche libre", value="autonomous AI agents")
-
-generate = st.sidebar.button("📊 Générer le rapport stratégique")
 
 # ▶️ Lancement du rapport stratégique
 if generate:
