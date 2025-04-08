@@ -19,6 +19,19 @@ serpapi_key = os.getenv("SERPAPI_KEY")
 notion_token = os.getenv("NOTION_TOKEN")
 notion_db = os.getenv("NOTION_DB_ID")
 
+#Bloc schedule
+def schedule_job():
+    schedule.every(24).hours.do(update_tendances) 
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+# 🔁 Lancer le thread de mise à jour automatique
+threading.Thread(target=schedule_job, daemon=True).start()
+
+# Lancer une 1re mise à jour au démarrage
+update_tendances()
+
 st.set_page_config(page_title="AgentWatch AI", layout="wide", page_icon="🤖")
 st.markdown("""
     <style>
@@ -44,6 +57,18 @@ def schedule_job():
         schedule.run_pending()
         time.sleep(1)
 threading.Thread(target=schedule_job, daemon=True).start()
+
+# 🔁 Mise à jour automatique des tendances (tâche planifiée)
+tendances_ia = {"sante": [], "finance": [], "last_update": ""}
+
+def update_tendances():
+    global tendances_ia
+    keywords_sante = "healthcare AI agent OR autonomous medical agent OR diagnostic AI OR patient AI"
+    keywords_finance = "finance AI agent OR investment AI OR fraud detection AI OR autonomous finance agent"
+
+    tendances_ia["sante"] = search_arxiv(query=keywords_sante, max_results=3) + get_google_news(keywords_sante, serpapi_key, max_results=2)
+    tendances_ia["finance"] = search_arxiv(query=keywords_finance, max_results=3) + get_google_news(keywords_finance, serpapi_key, max_results=2)
+    tendances_ia["last_update"] = datetime.now().strftime("%d %B %Y – %H:%M")
 
 # Filtre utilisateur (sidebar)
 generate = st.sidebar.button("📊 Générer le rapport stratégique")
@@ -80,9 +105,19 @@ def get_google_news(query, api_key, max_results=5):
 def search_arxiv(query="autonomous AI agents", max_results=5):
     base_url = "http://export.arxiv.org/api/query?"
     encoded_query = urllib.parse.quote(query)
+    # Requête limitée aux 7 derniers jours (environ)
     query_url = f"search_query=all:{encoded_query}&start=0&max_results={max_results}&sortBy=lastUpdatedDate&sortOrder=descending"
+    
     feed = feedparser.parse(base_url + query_url)
-    return [{"title": e.title, "summary": e.summary, "link": e.link, "published": e.published} for e in feed.entries]
+    results = []
+    for entry in feed.entries:
+        results.append({
+            "title": entry.title,
+            "summary": entry.summary,
+            "link": entry.link,
+            "published": entry.published
+        })
+    return results
 
 def get_google_news(query, api_key, max_results=5):
     response = requests.get("https://serpapi.com/search", params={
@@ -96,29 +131,26 @@ def analyse_salesforce(secteur, pays, entreprise, insights, articles, news):
     st.markdown("### 🧠 Recommandation stratégique Salesforce")
     recommandations = []
 
-    # 🔍 Analyse des insights internes
-    for insight in insights:
-        insight_lower = insight.lower()
+   # 📡 Tendances dynamiques affichées à l'écran
+st.header("📡 Tendances par secteur – Santé & Finance")
 
-        if secteur == "Santé":
-            if "suivi" in insight_lower or "tri" in insight_lower:
-                recommandations.append("🩺 Déployer un agent IA dans Salesforce HealthCloud pour le suivi patient.")
-            if "diagnostic" in insight_lower:
-                recommandations.append("🧬 Intégrer une IA d’aide au diagnostic dans le parcours clinique.")
-            if entreprise.lower() in insight_lower:
-                recommandations.append(f"🎯 Approfondir l’usage de l’IA chez {entreprise} dans le secteur Santé.")
-            if pays == "États-Unis":
-                recommandations.append("🇺🇸 S’inspirer des initiatives américaines comme Mayo Clinic pour les agents IA médicaux.")
+col1, col2 = st.columns(2)
 
-        elif secteur == "Finance":
-            if "portefeuille" in insight_lower:
-                recommandations.append("💼 Intégrer un assistant IA dans Salesforce pour la gestion de portefeuille.")
-            if "fraude" in insight_lower:
-                recommandations.append("🔒 Utiliser Einstein GPT pour la détection intelligente de fraude.")
-            if entreprise == "JP Morgan":
-                recommandations.append("🏦 Capitaliser sur l’expérience IA de JP Morgan avec les solutions Salesforce.")
-            if pays == "France":
-                recommandations.append("🇫🇷 Prendre en compte les régulations françaises sur l’automatisation financière.")
+with col1:
+    st.subheader("🏥 Santé")
+    for item in tendances_ia["sante"]:
+        titre = item.get("title") or item.get("title", "Sans titre")
+        lien = item.get("link") or "#"
+        st.markdown(f"📌 [{titre}]({lien})")
+
+with col2:
+    st.subheader("💰 Finance")
+    for item in tendances_ia["finance"]:
+        titre = item.get("title") or item.get("title", "Sans titre")
+        lien = item.get("link") or "#"
+        st.markdown(f"📌 [{titre}]({lien})")
+
+st.caption(f"⏱ Données actualisées le : {tendances_ia['last_update']}")
 
     # 🔬 Analyse des publications scientifiques (Arxiv)
     for article in articles:
@@ -176,25 +208,72 @@ def analyse_salesforce(secteur, pays, entreprise, insights, articles, news):
         st.info(f"💡 {reco}")
 
 
-# 📡 Tendances générales statiques
-st.header("📡 Tendances par secteur")
+# 📡 Tendances dynamiques (recherches automatisées)
+st.header("📡 Tendances IA en Santé & Finance – Dernières 24h")
+
+keywords_sante = "healthcare AI agent OR autonomous medical agent OR diagnostic AI OR patient AI"
+keywords_finance = "finance AI agent OR investment AI OR fraud detection AI OR autonomous finance agent"
+
+# 📡 Tendances dynamiques (mise à jour auto + manuelle)
+if update or generate:
+    st.header("📡 Tendances IA – Actualisation intelligente Santé & Finance")
+
+    keywords_sante = "healthcare AI agent OR autonomous medical agent OR diagnostic AI OR patient AI"
+    keywords_finance = "finance AI agent OR investment AI OR fraud detection AI OR autonomous finance agent"
+
+    # Recherches dynamiques
+    articles_sante = search_arxiv(query=keywords_sante, max_results=3)
+    articles_finance = search_arxiv(query=keywords_finance, max_results=3)
+    news_sante = get_google_news(keywords_sante, serpapi_key, max_results=2)
+    news_finance = get_google_news(keywords_finance, serpapi_key, max_results=2)
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("🏥 Santé")
+        if articles_sante:
+            for a in articles_sante:
+                st.markdown(f"📘 [{a['title']}]({a['link']}) — *{a['published'][:10]}*")
+        if news_sante:
+            for n in news_sante:
+                st.markdown(f"🗞️ [{n['title']}]({n['link']})")
+
+    with col2:
+        st.subheader("💰 Finance")
+        if articles_finance:
+            for a in articles_finance:
+                st.markdown(f"📘 [{a['title']}]({a['link']}) — *{a['published'][:10]}*")
+        if news_finance:
+            for n in news_finance:
+                st.markdown(f"🗞️ [{n['title']}]({n['link']})")
+
+    st.caption(f"⏱ Données mises à jour le {datetime.now().strftime('%d %B %Y – %H:%M')}")
+
+# Requête Arxiv + News par secteur
+articles_sante = search_arxiv(query=keywords_sante, max_results=3)
+articles_finance = search_arxiv(query=keywords_finance, max_results=3)
+news_sante = get_google_news(keywords_sante, serpapi_key, max_results=2)
+news_finance = get_google_news(keywords_finance, serpapi_key, max_results=2)
 
 col1, col2 = st.columns(2)
+
 with col1:
-    st.subheader("🏥 Santé")
-    st.markdown("""
-    - 🧬 **Mayo Clinic** utilise des agents IA pour le tri des patients.
-    - 🩺 **Pfizer** teste un agent IA autonome pour le suivi post-traitement.
-    - 🧠 Étude Arxiv : "Autonomous Medical Agents 2025".
-    """)
+    st.subheader("🏥 Santé – Recherches et News")
+    if articles_sante:
+        for a in articles_sante:
+            st.markdown(f"📘 [{a['title']}]({a['link']}) — *{a['published'][:10]}*")
+    if news_sante:
+        for n in news_sante:
+            st.markdown(f"🗞️ [{n['title']}]({n['link']})")
 
 with col2:
-    st.subheader("💰 Finance")
-    st.markdown("""
-    - 🏦 **Goldman Sachs** implémente un agent IA pour le monitoring des risques.
-    - 💸 **JP Morgan** développe un assistant IA pour l’investissement personnalisé.
-    - 📈 CB Insights : +62% d'investissements IA en finance au Q1 2025.
-    """)
+    st.subheader("💰 Finance – Recherches et News")
+    if articles_finance:
+        for a in articles_finance:
+            st.markdown(f"📘 [{a['title']}]({a['link']}) — *{a['published'][:10]}*")
+    if news_finance:
+        for n in news_finance:
+            st.markdown(f"🗞️ [{n['title']}]({n['link']})")
 
 # 🔄 Sections dynamiques
 if update:
@@ -277,25 +356,6 @@ if update:
                 with open("rapport_ia.pdf", "rb") as f:
                     st.download_button("📥 Télécharger le PDF", f, file_name="rapport_ia.pdf")
 
-# 📡 Tendances générales statiques
-st.header("📡 Tendances par secteur")
-
-col1, col2 = st.columns(2)
-with col1:
-    st.subheader("🏥 Santé")
-    st.markdown("""
-    - 🧬 **Mayo Clinic** utilise des agents IA pour le tri des patients.
-    - 🩺 **Pfizer** teste un agent IA autonome pour le suivi post-traitement.
-    - 🧠 Étude Arxiv : "Autonomous Medical Agents 2025".
-    """)
-
-with col2:
-    st.subheader("💰 Finance")
-    st.markdown("""
-    - 🏦 **Goldman Sachs** implémente un agent IA pour le monitoring des risques.
-    - 💸 **JP Morgan** développe un assistant IA pour l’investissement personnalisé.
-    - 📈 CB Insights : +62% d'investissements IA en finance au Q1 2025.
-    """)
 
 # 🔄 Sections dynamiques après clic sur le bouton
 if update:
@@ -416,9 +476,6 @@ def get_insights_data(secteur, pays, entreprise):
     entreprise_note = f"🔎 Focus sur **{entreprise}**" if entreprise != "Toutes" else ""
 
     return data.get(secteur, []), pays_note, entreprise_note
-
-# 📄 Rapport Stratégique
-st.header("📄 Rapport Stratégique")
 
 # ⬅️ Cette ligne est essentielle pour initialiser insights avant de l'utiliser
 insights, note_pays, note_entreprise = get_insights_data(selected_secteur, selected_pays, selected_entreprise)
