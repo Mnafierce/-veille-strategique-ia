@@ -232,5 +232,5 @@ if generate:
             st.success("Rapport enregistré dans Notion ✅")
 
 # ✅ Footer
-st.markdown("---")
-st.markdown("🧠 *Propulsé par AgentWatch AI — Salesforce Strategy Pilot v1.0*")
+    st.markdown("---")
+    st.markdown("🧠 *Propulsé par AgentWatch AI — Salesforce Strategy Pilot v1.0*")
