@@ -1,4 +1,3 @@
-
 import streamlit as st
 from datetime import datetime
 import feedparser
@@ -30,10 +29,14 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ⏱ Rafraîchissement automatique
+import time  # à ajouter en haut
+
 def schedule_job():
     schedule.every(2).hours.do(lambda: print("🔁 Données mises à jour."))
     while True:
         schedule.run_pending()
+        time.sleep(1)  # <== essentiel pour éviter le blocage CPU
+
 
 threading.Thread(target=schedule_job, daemon=True).start()
 
@@ -81,7 +84,6 @@ def get_google_news(query, api_key, max_results=5):
     r = requests.get(url, params=params)
     return r.json().get("news_results", []) if r.status_code == 200 else []
 
-
 # 🎛️ Interface - Filtres
 st.title("🧠 AgentWatch AI – Veille Stratégique")
 st.markdown("**Analyse des opportunités d'agents IA externes dans la santé, la finance et la technologie.**")
@@ -101,17 +103,16 @@ score_ia = {
     "Zara": 68
 }
 
-
+# ⬇️ Sélections
 col1, col2, col3 = st.columns(3)
 selected_secteur = col1.selectbox("📂 Secteur", secteurs)
 selected_pays = col2.selectbox("🌍 Pays", pays)
 selected_entreprise = col3.selectbox("🏢 Entreprise", entreprises)
-search_keyword = st.text_input("🔍 Recherche libre", value="autonomous AI agents")
 
+search_keyword = st.text_input("🔍 Recherche libre", value="autonomous AI agents")
 generate = st.button("📊 Générer le rapport stratégique")
 
-
-# 🔍 Données internes
+# 🔍 Données internes simulées
 def get_insights_data(secteur):
     return {
         "Santé": ["Pfizer développe un agent IA post-op.", "Mayo Clinic teste un triage autonome."],
@@ -119,7 +120,7 @@ def get_insights_data(secteur):
         "Retail": ["Amazon teste IA logistique.", "Zara utilise IA pour prévisions de mode."]
     }.get(secteur, [])
 
-# 🧠 Analyse stratégique & recommandation Salesforce
+# 🧠 Recommandation stratégique Salesforce
 def analyse_salesforce(secteur, entreprise, insights):
     reco = {
         "Santé": "Créer un agent Salesforce HealthCloud pour suivi post-chirurgical.",
@@ -133,7 +134,7 @@ def analyse_salesforce(secteur, entreprise, insights):
 **Recommandation :** {reco.get(secteur, "Explorer les cas IA applicables au CRM.")}  
     """)
 
-# 📊 Visualisation dynamique
+# 📊 Visualisations par secteur
 def afficher_graphiques_secteur():
     st.subheader("📈 Statistiques par secteur")
     df = pd.DataFrame({
@@ -144,44 +145,14 @@ def afficher_graphiques_secteur():
     fig = px.line(df, x="Mois", y=["Santé", "Finance"], title="Évolution des projets IA", markers=True)
     st.plotly_chart(fig, use_container_width=True)
 
-    pie = px.pie(names=["Agent diagnostic", "NLP", "Support client", "Investissement", "Prévision"], 
-                 values=[20, 25, 15, 30, 10],
-                 title="Répartition des types d’agents IA observés")
+    pie = px.pie(
+        names=["Agent diagnostic", "NLP", "Support client", "Investissement", "Prévision"], 
+        values=[20, 25, 15, 30, 10],
+        title="Répartition des types d’agents IA observés"
+    )
     st.plotly_chart(pie, use_container_width=True)
 
-# 📄 PDF Export
-def export_pdf(secteur, entreprise, insights):
-    html = f"""
-    <html><head><meta charset='UTF-8'></head><body>
-    <h1>Rapport Stratégique IA</h1>
-    <p><strong>Secteur :</strong> {secteur}</p>
-    <p><strong>Entreprise :</strong> {entreprise}</p>
-    <p><strong>Date :</strong> {datetime.now().strftime('%d %B %Y')}</p>
-    <ul>{''.join(f"<li>{i}</li>" for i in insights)}</ul>
-    </body></html>
-    """
-    pdfkit.from_string(html, "rapport_ia.pdf")
-    with open("rapport_ia.pdf", "rb") as f:
-        st.download_button("📥 Télécharger le rapport PDF", f, file_name="rapport_ia.pdf")
-
-# 📤 Notion
-def enregistrer_dans_notion(titre, contenu, secteur, entreprise):
-    notion = Client(auth=notion_token)
-    notion.pages.create(
-        parent={"database_id": notion_db},
-        properties={
-            "Nom": {"title": [{"text": {"content": titre}}]},
-            "Secteur": {"rich_text": [{"text": {"content": secteur}}]},
-            "Entreprise": {"rich_text": [{"text": {"content": entreprise}}]},
-            "Date": {"date": {"start": datetime.now().isoformat()}}
-        },
-        children=[{
-            "object": "block", "type": "paragraph",
-            "paragraph": {"text": [{"type": "text", "text": {"content": contenu}}]}
-        }]
-    )
-
-# 📌 Plan d’action stratégique
+# 📌 Définition du plan d’action stratégique
 def afficher_plan_action(secteur, entreprise):
     st.subheader("📌 Plan d’action stratégique")
     actions = {
@@ -199,34 +170,86 @@ def afficher_plan_action(secteur, entreprise):
             "✅ Déployer un agent IA prédictif sur les tendances d’achat",
             "✅ Analyser les comportements clients pour la personnalisation",
             "✅ Former les équipes CRM aux outils augmentés IA"
+        ],
+        "Éducation": [
+            "✅ Lancer un chatbot IA pour suivi étudiant",
+            "✅ Partenariat EdTech pour apprentissage personnalisé",
+            "✅ Suivi des progrès en temps réel pour les profs"
         ]
     }
     for action in actions.get(secteur, ["⚠️ Analyse IA stratégique en cours."]):
         st.markdown(action)
 
+# 📌 Plan d’action stratégique
+if st.button("📌 Voir le plan d’action stratégique"):
+    afficher_plan_action(selected_secteur, selected_entreprise)
 
-# ▶️ Exécution principale
+
+# 📤 PDF Export
+def export_pdf(secteur, entreprise, insights):
+    html = f"""
+    <html><head><meta charset='UTF-8'></head><body>
+    <h1>Rapport Stratégique IA</h1>
+    <p><strong>Secteur :</strong> {secteur}</p>
+    <p><strong>Entreprise :</strong> {entreprise}</p>
+    <p><strong>Date :</strong> {datetime.now().strftime('%d %B %Y')}</p>
+    <ul>{''.join(f"<li>{i}</li>" for i in insights)}</ul>
+    </body></html>
+    """
+    pdfkit.from_string(html, "rapport_ia.pdf")
+    with open("rapport_ia.pdf", "rb") as f:
+        st.download_button("📥 Télécharger le rapport PDF", f, file_name="rapport_ia.pdf")
+        
+def export_pdf(secteur, entreprise, insights):
+    try:
+        html = f""" ... """
+        pdfkit.from_string(html, "rapport_ia.pdf")
+        with open("rapport_ia.pdf", "rb") as f:
+            st.download_button("📥 Télécharger le rapport PDF", f, file_name="rapport_ia.pdf")
+    except OSError:
+        st.error("❌ wkhtmltopdf non trouvé. Veuillez l’installer ou le configurer.")
+
+
+# 🗃️ Enregistrement dans Notion
+def enregistrer_dans_notion(titre, contenu, secteur, entreprise):
+    notion = Client(auth=notion_token)
+    notion.pages.create(
+        parent={"database_id": notion_db},
+        properties={
+            "Nom": {"title": [{"text": {"content": titre}}]},
+            "Secteur": {"rich_text": [{"text": {"content": secteur}}]},
+            "Entreprise": {"rich_text": [{"text": {"content": entreprise}}]},
+            "Date": {"date": {"start": datetime.now().isoformat()}}
+        },
+        children=[{
+            "object": "block", "type": "paragraph",
+            "paragraph": {"text": [{"type": "text", "text": {"content": contenu}}]}
+        }]
+    )
+    if not notion_token or not notion_db:
+    st.warning("⚠️ Configuration Notion manquante.")
+    return
+
+
+# ▶️ Logique principale déclenchée par le bouton
 if generate:
     st.success("✅ Rapport généré avec succès")
     st.markdown("---")
-    
-    # 🧮 Score IA si mono-entreprise
-if selected_entreprise != "Toutes":
-    score = score_ia.get(selected_entreprise)
-    if score:
-        st.subheader("🧮 Score de maturité IA")
-        st.metric(label="Niveau technologique estimé", value=f"{score}/100")
-        st.progress(score / 100)
 
+    if selected_entreprise != "Toutes":
+        score = score_ia.get(selected_entreprise)
+        if score:
+            st.subheader("🧮 Score de maturité IA")
+            st.metric(label="Niveau technologique estimé", value=f"{score}/100")
+            st.progress(score / 100)
 
-
-    # 🔎 Données externes
+    # 🔎 Récupération des données
     arxiv_query = f"{search_keyword} {selected_entreprise} {selected_secteur}"
     articles = search_arxiv(arxiv_query)
     pubmed = search_pubmed(f"{search_keyword} {selected_secteur}")
     news = get_google_news(f"{selected_entreprise} {search_keyword}", serpapi_key) if selected_entreprise != "Toutes" else []
 
-    # 🔬 Affichage Arxiv
+    # 📚 Affichage des résultats
     st.subheader("📚 Études scientifiques – Arxiv")
     if articles:
         for a in articles:
@@ -234,7 +257,6 @@ if selected_entreprise != "Toutes":
     else:
         st.info("Aucune publication Arxiv trouvée.")
 
-    # 🔬 Affichage PubMed
     st.subheader("🧬 Recherches médicales – PubMed")
     if pubmed:
         for p in pubmed:
@@ -242,14 +264,12 @@ if selected_entreprise != "Toutes":
     else:
         st.info("Aucune donnée PubMed trouvée.")
 
-    # 🗞️ Actualités Google
     if news:
         st.subheader("🗞️ Actualités – Google News")
         for n in news:
             st.markdown(f"**[{n['title']}]({n['link']})**\n> {n.get('snippet', '...')}")
 
-
-    # 📄 Analyse stratégique
+    # 📌 Analyse stratégique
     st.subheader("📌 Synthèse stratégique")
     insights = get_insights_data(selected_secteur)
     if insights:
@@ -257,42 +277,28 @@ if selected_entreprise != "Toutes":
             st.markdown(f"- {i}")
     else:
         st.warning("Aucun insight détecté.")
-    
-    # 🤖 Analyse Salesforce
+
+    # 🧠 Analyse Salesforce
     analyse_salesforce(selected_secteur, selected_entreprise, insights)
 
-   def afficher_plan_action(secteur, entreprise):
-    st.subheader("📌 Plan d’action stratégique")
-    actions = {
-        "Santé": [
-            "✅ Analyser les parcours patients et intégrer un agent IA de suivi",
-            "✅ Créer un partenariat avec une startup MedTech IA",
-            "✅ Déployer un pilote sur un cas d’usage clinique ciblé"
-        ],
-        "Finance": [
-            "✅ Intégrer un assistant IA dans l’espace client Salesforce",
-            "✅ Automatiser la détection de risque avec des agents LLM",
-            "✅ Evaluer l’impact réglementaire des IA autonomes"
-        ],
-        "Retail": [
-            "✅ Déployer un agent IA prédictif sur les tendances d’achat",
-            "✅ Analyser les comportements clients pour la personnalisation",
-            "✅ Former les équipes CRM aux outils augmentés IA"
-        ]
-    }
-    for action in actions.get(secteur, ["⚠️ Analyse IA stratégique en cours."]):
-        st.markdown(action)
-
-
-    # 📊 Graphiques
+    # 📈 Graphiques
     afficher_graphiques_secteur()
 
-    # 📤 PDF & Notion
+    # 📌 Plan d'action
+    afficher_plan_action(selected_secteur, selected_entreprise)
+
+    # 📤 Boutons PDF & Notion
     st.markdown("---")
     col1, col2 = st.columns([1, 1])
     with col1:
         if st.button("📥 Télécharger le rapport en PDF"):
             export_pdf(selected_secteur, selected_entreprise, insights)
+        
+        if insights:
+    with col1:
+        if st.button("📥 Télécharger le rapport en PDF"):
+            export_pdf(selected_secteur, selected_entreprise, insights)
+
 
     with col2:
         if st.button("🗃 Enregistrer dans Notion"):
@@ -300,33 +306,6 @@ if selected_entreprise != "Toutes":
             enregistrer_dans_notion("Rapport IA", contenu, selected_secteur, selected_entreprise)
             st.success("Rapport enregistré dans Notion ✅")
 
-
-    # 📄 Analyse stratégique
-    st.subheader("📌 Synthèse stratégique")
-    insights = get_insights_data(selected_secteur)
-    if insights:
-        for i in insights:
-            st.markdown(f"- {i}")
-    else:
-        st.warning("Aucun insight détecté.")
-    
-    # 🤖 Analyse Salesforce
-    analyse_salesforce(selected_secteur, selected_entreprise, insights)
-
-    # 📊 Graphiques
-    afficher_graphiques_secteur()
-
-
-    # 📤 PDF & Notion
-    st.markdown("---")
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        if st.button("📥 Télécharger le rapport en PDF"):
-            export_pdf(selected_secteur, selected_entreprise, insights)
-
-    with col2:
-        if st.button("🗃 Enregistrer dans Notion"):
-            contenu = f"Insights : {' | '.join(insights)}"
-            enregistrer_dans_notion("Rapport IA", contenu, selected_secteur, selected_entreprise)
-            st.success("Rapport enregistré dans Notion ✅")
+st.markdown("---")
+st.markdown("🧠 *Propulsé par AgentWatch AI — Salesforce Strategy Pilot v1.0*")
 
