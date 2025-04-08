@@ -148,6 +148,21 @@ def enregistrer_dans_notion(titre, contenu, secteur, entreprise):
         }]
     )
 
+# 🎛️ Interface - Filtres utilisateurs
+st.sidebar.header("🎛️ Filtres de veille stratégique")
+secteurs = ["Tous", "Santé", "Finance", "Éducation", "Retail"]
+pays = ["Tous", "Canada", "États-Unis", "France", "Allemagne"]
+entreprises = ["Toutes", "Pfizer", "JP Morgan", "Mayo Clinic", "OpenAI", "Amazon", "Coursera", "Zara"]
+
+selected_secteur = st.sidebar.selectbox("📂 Secteur", secteurs)
+selected_pays = st.sidebar.selectbox("🌍 Pays", pays)
+selected_entreprise = st.sidebar.selectbox("🏢 Entreprise", entreprises)
+search_keyword = st.sidebar.text_input("🔍 Recherche libre", value="autonomous AI agents")
+
+# Bouton pour déclencher le rapport
+generate = st.sidebar.button("📊 Générer le rapport stratégique")
+
+
 # ▶️ Lancement du rapport stratégique
 if generate:
     st.success("✅ Rapport généré avec succès")
