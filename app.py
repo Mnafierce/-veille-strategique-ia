@@ -29,7 +29,6 @@ serpapi_key = os.getenv("SERPAPI_KEY")
 notion_token = os.getenv("NOTION_TOKEN")
 notion_db = os.getenv("NOTION_DB_ID")
 
-
 # ⏱ Rafraîchissement automatique
 def schedule_job():
     schedule.every(2).hours.do(lambda: print("🔁 Données mises à jour."))
@@ -109,10 +108,6 @@ def afficher_plan_action(secteur, entreprise):
     for action in actions.get(secteur, ["⚠️ Analyse IA stratégique en cours."]):
         st.markdown(action)
 
-
-    # ✅ Plan d’action
-    afficher_plan_action(selected_secteur, selected_entreprise)
-
 # 📤 Export PDF sécurisé
 def export_pdf(secteur, entreprise, insights):
     try:
@@ -171,6 +166,8 @@ generate = st.sidebar.button("📊 Générer le rapport stratégique")
 if generate:
     st.success("✅ Rapport généré avec succès")
     st.markdown("---")
+    # ✅ Plan d’action
+afficher_plan_action(selected_secteur, selected_entreprise)
 
     if selected_entreprise != "Toutes":
         score = score_ia.get(selected_entreprise)
