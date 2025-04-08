@@ -152,7 +152,7 @@ with col2:
 
 st.caption(f"⏱ Données actualisées le : {tendances_ia['last_update']}")
 
-    # 🔬 Analyse des publications scientifiques (Arxiv)
+# 🔬 Analyse des publications scientifiques (Arxiv)
     for article in articles:
         summary = article.get("summary", "").lower()
 
