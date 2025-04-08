@@ -108,7 +108,8 @@ def afficher_plan_action(secteur, entreprise):
     }
     for action in actions.get(secteur, ["⚠️ Analyse IA stratégique en cours."]):
         st.markdown(action)
-        
+
+
     # ✅ Plan d’action
     afficher_plan_action(selected_secteur, selected_entreprise)
 
