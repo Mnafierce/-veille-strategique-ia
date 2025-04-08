@@ -168,33 +168,7 @@ if generate:
     st.markdown("---")
 
     # 📌 Plan d’action stratégique
-def afficher_plan_action(secteur, entreprise):
-    st.subheader("📌 Plan d’action stratégique")
-    actions = {
-        "Santé": [
-            "✅ Analyser les parcours patients et intégrer un agent IA de suivi",
-            "✅ Créer un partenariat avec une startup MedTech IA",
-            "✅ Déployer un pilote sur un cas d’usage clinique ciblé"
-        ],
-        "Finance": [
-            "✅ Intégrer un assistant IA dans l’espace client Salesforce",
-            "✅ Automatiser la détection de risque avec des agents LLM",
-            "✅ Évaluer l’impact réglementaire des IA autonomes"
-        ],
-        "Retail": [
-            "✅ Déployer un agent IA prédictif sur les tendances d’achat",
-            "✅ Analyser les comportements clients pour la personnalisation",
-            "✅ Former les équipes CRM aux outils augmentés IA"
-        ],
-        "Éducation": [
-            "✅ Lancer un chatbot IA pour suivi étudiant",
-            "✅ Partenariat EdTech pour apprentissage personnalisé",
-            "✅ Suivi des progrès en temps réel pour les enseignants"
-        ]
-    }
-    for action in actions.get(secteur, ["⚠️ Analyse IA stratégique en cours."]):
-        st.markdown(action)
-
+    afficher_plan_action(secteur, entreprise)
 
     if selected_entreprise != "Toutes":
         score = score_ia.get(selected_entreprise)
