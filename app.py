@@ -79,37 +79,73 @@ def search_arxiv(query="autonomous AI agents", max_results=5):
         })
     return results
 
-# 🔍 Données simulées
-def get_insights_data(secteur, pays, entreprise):
-    data = {
-        "Santé": [
-            "Pfizer investit dans des agents IA pour le suivi post-opératoire.",
-            "Mayo Clinic pilote un programme IA pour le tri des patients chroniques."
-        ],
-        "Finance": [
-            "JP Morgan lance un assistant IA pour la gestion de portefeuille.",
-            "Goldman Sachs utilise des IA pour la détection de fraude en temps réel."
-        ],
-        "Éducation": [
-            "Coursera explore l'usage d'agents IA pour le tutorat personnalisé.",
-            "EdTech startups lèvent 200M$ pour intégrer IA dans l’apprentissage adaptatif."
-        ],
-        "Retail": [
-            "Amazon expérimente des agents IA autonomes dans la gestion de stock.",
-            "Zara intègre un agent IA de prédiction de tendances de mode."
-        ]
-    }
+# 🔍 analyse_salesforce
+def analyse_salesforce(secteur, entreprise, insights, articles, news):
+    st.markdown("### 🧠 Recommandation stratégique Salesforce")
 
-    pays_note = f"📍 Activités IA repérées en **{pays}**" if pays != "Tous" else ""
-    entreprise_note = f"🔎 Focus sur **{entreprise}**" if entreprise != "Toutes" else ""
+    recommandations = []
 
-    return data.get(secteur, []), pays_note, entreprise_note
+    # 🔍 Analyse des insights internes
+    for insight in insights:
+        insight_lower = insight.lower()
+        if secteur == "Santé":
+            if "suivi" in insight_lower or "tri" in insight_lower:
+                recommandations.append("Déployer un agent IA dans Salesforce HealthCloud pour le suivi patient.")
+        elif secteur == "Finance":
+            if "portefeuille" in insight_lower:
+                recommandations.append("Intégrer un assistant IA dans Salesforce pour la gestion de portefeuille.")
+            if "fraude" in insight_lower:
+                recommandations.append("Utiliser Einstein GPT pour la détection intelligente de fraude.")
+
+    # 🔬 Analyse des publications scientifiques (Arxiv)
+    for article in articles:
+        summary = article.get("summary", "").lower()
+        if secteur == "Santé":
+            if "diagnostic" in summary:
+                recommandations.append("Créer un module IA d’aide au diagnostic dans Salesforce HealthCloud.")
+            if "predictive model" in summary or "prediction" in summary:
+                recommandations.append("Utiliser un modèle prédictif connecté à Salesforce pour anticiper les risques médicaux.")
+        elif secteur == "Finance":
+            if "risk" in summary or "forecast" in summary:
+                recommandations.append("Intégrer une IA de prévision de risque dans Financial Services Cloud.")
+            if "autonomous agent" in summary:
+                recommandations.append("Explorer les agents autonomes pour l’automatisation des processus de scoring.")
+
+    # 🗞️ Analyse optionnelle des actualités
+    for article in news:
+        snippet = article.get("snippet", "").lower()
+        if secteur == "Santé" and "ai" in snippet and "patient" in snippet:
+            recommandations.append("Développer un agent conversationnel IA pour le suivi patient dans HealthCloud.")
+        elif secteur == "Finance" and "investment" in snippet:
+            recommandations.append("Étendre Salesforce avec une IA d’analyse des comportements d’investissement.")
+    
+    # 🔎 Analyse des études Arxiv
+    for article in articles:
+        summary = article["summary"].lower()
+        if secteur == "Santé":
+            if "diagnostic" in summary:
+                recommandations.append("Créer un outil d’aide au diagnostic connecté à Salesforce HealthCloud.")
+            if "predictive model" in summary:
+                recommandations.append("Intégrer un modèle prédictif de pathologie dans Salesforce.")
+        elif secteur == "Finance":
+            if "forecast" in summary or "risk" in summary:
+                recommandations.append("Déployer une IA de prévision des risques dans Salesforce Financial Cloud.")
+            if "autonomous agent" in summary:
+                recommandations.append("Étudier l'intégration d'agents autonomes dans les processus de scoring.")
+
+    # 🧠 Synthèse ou fallback
+    if not recommandations:
+        recommandations.append("Explorer des cas d’intégration IA récents dans l’environnement Salesforce.")
+
+    for reco in recommandations:
+        st.info(f"💡 {reco}")
+
 
 # 🎛️ Filtres
 st.sidebar.markdown(f"📅 **Dernière mise à jour :** {datetime.now().strftime('%d %B %Y')}")
 st.sidebar.header("🎛️ Filtres")
 
-secteurs = ["Tous", "Santé", "Finance", "Éducation", "Retail"]
+secteurs = ["Tous", "Santé", "Finance"]
 pays = ["Tous", "Canada", "États-Unis", "France", "Allemagne"]
 entreprises = ["Toutes", "Pfizer", "JP Morgan", "Mayo Clinic", "OpenAI", "Amazon", "Coursera", "Zara"]
 
@@ -145,6 +181,8 @@ with col2:
 
 # 🔄 Sections dynamiques
 if update:
+    # Avant : analyse_salesforce(...)
+    analyse_salesforce(selected_secteur, selected_entreprise, insights, articles, news)
 
     # 📰 Recherches scientifiques (Arxiv)
     st.header("📰 Recherches scientifiques (Arxiv)")
@@ -177,19 +215,6 @@ if update:
 
     # 📄 Rapport Stratégique
     st.header("📄 Rapport Stratégique")
-
-    if selected_entreprise == "Toutes":
-        st.subheader("📊 Rapport multi-entreprise")
-        for ent in entreprises[1:]:
-            st.markdown(f"### 🔹 {ent}")
-            insights, _, _ = get_insights_data(selected_secteur, selected_pays, ent)
-            if insights:
-                for i in insights:
-                    st.markdown(f"- {i}")
-            else:
-                st.markdown("_Aucune donnée disponible._")
-            st.markdown("---")
-    else:
         insights, note_pays, note_entreprise = get_insights_data(selected_secteur, selected_pays, selected_entreprise)
         st.markdown(f"### 📌 Rapport – {selected_entreprise}")
         if insights:
