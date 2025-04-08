@@ -91,45 +91,66 @@ def get_google_news(query, api_key, max_results=5):
 
 
 # 🔍 analyse_salesforce
-def analyse_salesforce(secteur, entreprise, insights, articles, news):
+def analyse_salesforce(secteur, pays, entreprise, insights, articles, news):
     st.markdown("### 🧠 Recommandation stratégique Salesforce")
-
     recommandations = []
 
-# 🔍 Analyse des insights internes
-def get_insights_data:
+    # 🔍 Analyse des insights internes
     for insight in insights:
         insight_lower = insight.lower()
+
         if secteur == "Santé":
             if "suivi" in insight_lower or "tri" in insight_lower:
-                recommandations.append("Déployer un agent IA dans Salesforce HealthCloud pour le suivi patient.")
+                recommandations.append("🩺 Déployer un agent IA dans Salesforce HealthCloud pour le suivi patient.")
+            if "diagnostic" in insight_lower:
+                recommandations.append("🧬 Intégrer une IA d’aide au diagnostic dans le parcours clinique.")
+            if entreprise.lower() in insight_lower:
+                recommandations.append(f"🎯 Approfondir l’usage de l’IA chez {entreprise} dans le secteur Santé.")
+            if pays == "États-Unis":
+                recommandations.append("🇺🇸 S’inspirer des initiatives américaines comme Mayo Clinic pour les agents IA médicaux.")
+
         elif secteur == "Finance":
             if "portefeuille" in insight_lower:
-                recommandations.append("Intégrer un assistant IA dans Salesforce pour la gestion de portefeuille.")
+                recommandations.append("💼 Intégrer un assistant IA dans Salesforce pour la gestion de portefeuille.")
             if "fraude" in insight_lower:
-                recommandations.append("Utiliser Einstein GPT pour la détection intelligente de fraude.")
+                recommandations.append("🔒 Utiliser Einstein GPT pour la détection intelligente de fraude.")
+            if entreprise == "JP Morgan":
+                recommandations.append("🏦 Capitaliser sur l’expérience IA de JP Morgan avec les solutions Salesforce.")
+            if pays == "France":
+                recommandations.append("🇫🇷 Prendre en compte les régulations françaises sur l’automatisation financière.")
 
- # 🔬 Analyse des publications scientifiques (Arxiv)
+    # 🔬 Analyse des publications scientifiques (Arxiv)
     for article in articles:
         summary = article.get("summary", "").lower()
+
         if secteur == "Santé":
             if "diagnostic" in summary:
-                recommandations.append("Créer un module IA d’aide au diagnostic dans Salesforce HealthCloud.")
+                recommandations.append("🧠 Créer un module IA d’aide au diagnostic dans Salesforce HealthCloud.")
             if "predictive model" in summary or "prediction" in summary:
-                recommandations.append("Utiliser un modèle prédictif connecté à Salesforce pour anticiper les risques médicaux.")
+                recommandations.append("📈 Utiliser un modèle prédictif connecté à Salesforce pour anticiper les risques médicaux.")
+
         elif secteur == "Finance":
             if "risk" in summary or "forecast" in summary:
-                recommandations.append("Intégrer une IA de prévision de risque dans Financial Services Cloud.")
+                recommandations.append("📊 Intégrer une IA de prévision de risque dans Financial Services Cloud.")
             if "autonomous agent" in summary:
-                recommandations.append("Explorer les agents autonomes pour l’automatisation des processus de scoring.")
+                recommandations.append("🤖 Étudier l’intégration d’agents autonomes dans les processus de scoring.")
 
-# 🗞️ Analyse optionnelle des actualités
+    # 🗞️ Analyse optionnelle des actualités
     for article in news:
         snippet = article.get("snippet", "").lower()
+
         if secteur == "Santé" and "ai" in snippet and "patient" in snippet:
-            recommandations.append("Développer un agent conversationnel IA pour le suivi patient dans HealthCloud.")
+            recommandations.append("💬 Développer un agent conversationnel IA pour le suivi patient dans HealthCloud.")
         elif secteur == "Finance" and "investment" in snippet:
-            recommandations.append("Étendre Salesforce avec une IA d’analyse des comportements d’investissement.")
+            recommandations.append("📉 Étendre Salesforce avec une IA d’analyse des comportements d’investissement.")
+
+    # Fallback
+    if not recommandations:
+        recommandations.append("🧭 Explorer les dernières intégrations IA dans l’environnement Salesforce pour ce secteur.")
+
+    # Affichage
+    for reco in recommandations:
+        st.info(f"💡 {reco}")
     
 # 🔎 Analyse des études Arxiv
     for article in articles:
