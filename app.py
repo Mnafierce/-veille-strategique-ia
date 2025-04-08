@@ -399,7 +399,23 @@ def afficher_graphiques_secteur():
 
 # 📄 Rapport Stratégique
 st.header("📄 Rapport Stratégique")
-insights, note_pays, note_entreprise = get_insights_data(selected_secteur, selected_pays, selected_entreprise)
+def get_insights_data(secteur, pays, entreprise):
+    data = {
+        "Santé": [
+            "Pfizer investit dans des agents IA pour le suivi post-opératoire.",
+            "Mayo Clinic pilote un programme IA pour le tri des patients chroniques."
+        ],
+        "Finance": [
+            "JP Morgan lance un assistant IA pour la gestion de portefeuille.",
+            "Goldman Sachs utilise des IA pour la détection de fraude en temps réel."
+        ]
+    }
+
+    pays_note = f"📍 Activités IA repérées en **{pays}**" if pays != "Tous" else ""
+    entreprise_note = f"🔎 Focus sur **{entreprise}**" if entreprise != "Toutes" else ""
+
+    return data.get(secteur, []), pays_note, entreprise_note
+
 st.markdown(f"### 📌 Rapport – {selected_entreprise}")
 if insights:
     for i in insights:
