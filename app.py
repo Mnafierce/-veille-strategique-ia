@@ -28,6 +28,10 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# 🌐 Configuration Streamlit
+st.title("🧠 AgentWatch AI – Veille Stratégique IA")
+st.markdown("**Analyse des avancées en agents IA autonomes dans les secteurs stratégiques.**")
+
 # 🔐 Charger les variables d'environnement
 load_dotenv()
 serpapi_key = os.getenv("SERPAPI_KEY")
@@ -100,11 +104,6 @@ def get_insights_data(secteur, pays, entreprise):
     entreprise_note = f"🔎 Focus sur **{entreprise}**" if entreprise != "Toutes" else ""
 
     return data.get(secteur, []), pays_note, entreprise_note
-
-# 🌐 Configuration Streamlit
-st.set_page_config(page_title="AgentWatch IA", layout="wide")
-st.title("🧠 AgentWatch AI – Veille Stratégique IA")
-st.markdown("**Analyse des avancées en agents IA autonomes dans les secteurs stratégiques.**")
 
 # 🎛️ Filtres
 st.sidebar.markdown(f"📅 **Dernière mise à jour :** {datetime.now().strftime('%d %B %Y')}")
