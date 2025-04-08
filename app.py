@@ -108,6 +108,9 @@ def afficher_plan_action(secteur, entreprise):
     }
     for action in actions.get(secteur, ["⚠️ Analyse IA stratégique en cours."]):
         st.markdown(action)
+        
+    # ✅ Plan d’action
+    afficher_plan_action(selected_secteur, selected_entreprise)
 
 # 📤 Export PDF sécurisé
 def export_pdf(secteur, entreprise, insights):
@@ -217,9 +220,6 @@ if generate:
 
     # 📈 Graphiques
     afficher_graphiques_secteur()
-
-    # ✅ Plan d’action
-    afficher_plan_action(selected_secteur, selected_entreprise)
 
     # 📥 PDF & Notion
     st.markdown("---")
