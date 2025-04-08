@@ -46,6 +46,7 @@ def schedule_job():
 threading.Thread(target=schedule_job, daemon=True).start()
 
 # Filtre utilisateur (sidebar)
+generate = st.sidebar.button("📊 Générer le rapport stratégique")
 st.sidebar.markdown(f"📅 **Dernière mise à jour :** {datetime.now().strftime('%d %B %Y')}")
 st.sidebar.header("🎛️ Filtres")
 
@@ -481,6 +482,7 @@ def enregistrer_dans_notion(titre, contenu, secteur, entreprise):
 # ▶️ Lancement du rapport stratégique
 if generate:
     st.success("✅ Rapport généré avec succès")
+    ...
     st.markdown("---")
 
     if selected_entreprise != "Toutes":
