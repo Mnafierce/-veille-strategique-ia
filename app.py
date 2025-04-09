@@ -76,9 +76,9 @@ def update_tendances():
         "Santé": ["healthcare AI", "medical agents", "AI diagnosis", "AI patient care"],
         "Finance": ["AI investment", "AI in banking", "fraud detection AI", "autonomous financial agents"]
     }
-    for secteur, keywords in mots_cles.items():
-    ...
+for secteur, keywords in mots_cles.items():
     st.header("📡 Tendances par secteur – Santé & Finance")
+    
 col1, col2 = st.columns(2)
 
 with col1:
