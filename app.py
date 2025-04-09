@@ -69,34 +69,55 @@ threading.Thread(target=schedule_job, daemon=True).start()
 
 
 # Lancer une 1re mise à jour au démarrage
+def mots_cles():
+    return {
+        "Santé": [
+            "healthcare AI",
+            "medical agents",
+            "AI diagnosis",
+            "AI patient care"
+        ],
+        "Finance": [
+            "AI investment",
+            "AI in banking",
+            "fraud detection AI",
+            "autonomous financial agents"
+        ]
+    }
 def update_tendances():
     st.session_state["tendances"] = {"Santé": [], "Finance": []}
 
-def mots_cles (): 
-        "Santé": ["healthcare AI", "medical agents", "AI diagnosis", "AI patient care"],
-        "Finance": ["AI investment", "AI in banking", "fraud detection AI", "autonomous financial agents"]
+    for secteur, keywords in mots_cles().items():
+        for kw in keywords:
+            # Arxiv
+            articles = search_arxiv(query=kw, max_results=1)
+            for article in articles:
+                st.session_state["tendances"][secteur].append(f"📘 {article['title']}")
 
-for secteur, keywords in mots_cles.items():
-    st.header("📡 Tendances par secteur – Santé & Finance")
+            # Google News
+            news = get_google_news(kw, serpapi_key, max_results=1)
+            for item in news:
+                st.session_state["tendances"][secteur].append(f"🗞️ {item['title']}")
+if "tendances" not in st.session_state:
+    update_tendances()
 
+st.header("📡 Tendances IA par secteur – Santé & Finance")
 col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("🏥 Santé")
-    for t in st.session_state["tendances"]["Santé"]:
-        st.markdown(f"- {t}")
+    for ligne in st.session_state["tendances"]["Santé"]:
+        st.markdown(f"- {ligne}")
 
 with col2:
     st.subheader("💰 Finance")
-    for t in st.session_state["tendances"]["Finance"]:
-        st.markdown(f"- {t}")
+    for ligne in st.session_state["tendances"]["Finance"]:
+        st.markdown(f"- {ligne}")
 
-    for secteur, keywords in mots_cles.items():
-        for kw in keywords:
-            for result in search_arxiv(kw, max_results=1):
-                st.session_state["tendances"][secteur].append(f"📚 {result['title']}")
-            for article in get_google_news(kw, serpapi_key, max_results=1):
-                st.session_state["tendances"][secteur].append(f"🗞️ {article['title']}")
+if st.sidebar.button("🔄 Mettre à jour les tendances maintenant"):
+    update_tendances()
+    st.sidebar.success("Tendances mises à jour ✅")
+
     # Arxiv - Recherches scientifiques
     for secteur, keywords in zip(["Santé", "Finance"], [mots_cles_sante, mots_cles_finance]):
         for kw in keywords:
@@ -104,6 +125,13 @@ with col2:
             for r in results:
                 titre = r["title"]
                 st.session_state["tendances"][secteur].append(f"📚 {titre}")
+
+        for secteur, keywords in mots_cles.items():
+        for kw in keywords:
+            for result in search_arxiv(kw, max_results=1):
+                st.session_state["tendances"][secteur].append(f"📚 {result['title']}")
+            for article in get_google_news(kw, serpapi_key, max_results=1):
+                st.session_state["tendances"][secteur].append(f"🗞️ {article['title']}")
 
     # SerpAPI - Actualités récentes
     for secteur, keywords in zip(["Santé", "Finance"], [mots_cles_sante, mots_cles_finance]):
