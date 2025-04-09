@@ -155,7 +155,7 @@ for secteur, keywords in zip(["Santé", "Finance"], [mots_cles_sante, mots_cles_
     for kw in keywords:
             news = get_google_news(kw, serpapi_key)
     for article in news[:1]:
-st.session_state["tendances"][secteur].append(f"🗞️ {article['title']}")
+        st.session_state["tendances"][secteur].append(f"🗞️ {article['title']}")
 
 if "tendances" not in st.session_state:
     update_tendances()
