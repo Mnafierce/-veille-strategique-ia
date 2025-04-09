@@ -67,13 +67,6 @@ def schedule_job():
 
 threading.Thread(target=schedule_job, daemon=True).start()
 
-# Initialisation des tendances à la 1re ouverture
-if "tendances" not in st.session_state:
-    update_tendances()
-
-
-# 🔁 Lancer le thread de mise à jour automatique
-threading.Thread(target=schedule_job, daemon=True).start()
 
 # Lancer une 1re mise à jour au démarrage
 def update_tendances():
@@ -83,6 +76,8 @@ def update_tendances():
         "Santé": ["healthcare AI", "medical agents", "AI diagnosis", "AI patient care"],
         "Finance": ["AI investment", "AI in banking", "fraud detection AI", "autonomous financial agents"]
     }
+    for secteur, keywords in mots_cles.items():
+    ...
     st.header("📡 Tendances par secteur – Santé & Finance")
 col1, col2 = st.columns(2)
 
@@ -116,6 +111,10 @@ with col2:
             news = get_google_news(kw, serpapi_key)
             for article in news[:1]:
                 st.session_state["tendances"][secteur].append(f"🗞️ {article['title']}")
+
+# Initialisation des tendances à la 1re ouverture
+if "tendances" not in st.session_state:
+    update_tendances()
 
 # Met à jour au démarrage si non encore chargé
 if "tendances" not in st.session_state:
@@ -189,19 +188,19 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("🏥 Santé")
-    for item in tendances_ia["sante"]:
+    for item in tendances["sante"]:
         titre = item.get("title") or item.get("title", "Sans titre")
         lien = item.get("link") or "#"
         st.markdown(f"📌 [{titre}]({lien})")
 
 with col2:
     st.subheader("💰 Finance")
-    for item in tendances_ia["finance"]:
+    for item in tendances["finance"]:
         titre = item.get("title") or item.get("title", "Sans titre")
         lien = item.get("link") or "#"
         st.markdown(f"📌 [{titre}]({lien})")
 
-st.caption(f"⏱ Données actualisées le : {tendances_ia['last_update']}")
+st.caption(f"⏱ Données actualisées le : {tendances['last_update']}")
 
 # 🧠 Recommandation stratégique Salesforce
 def analyse_salesforce(secteur, entreprise, insights, articles, news):
