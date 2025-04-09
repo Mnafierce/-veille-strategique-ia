@@ -186,12 +186,12 @@ def afficher_graphiques_secteur():
                 st.session_state["tendances"][secteur].append(f"🗞️ {item['title']}")
 
 # Initialisation des tendances à la 1re ouverture
-if "tendances" not in st.session_state
-
+if "tendances" not in st.session_state:
+    update_tendances()
 
 # Met à jour au démarrage si non encore chargé
-if "tendances" not in st.session_state
-
+if "tendances" not in st.session_state:
+    update_tendances()
 
 st.markdown("""
     <style>
