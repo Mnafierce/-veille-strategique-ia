@@ -164,12 +164,12 @@ def afficher_graphiques_secteur():
 
 
     # Arxiv - Recherches scientifiques
-   for secteur, keywords in zip(["Santé", "Finance"], [mots_cles()["Santé"], mots_cles()["Finance"]]):
+    for secteur, keywords in zip(["Santé", "Finance"], [mots_cles()["Santé"], mots_cles()["Finance"]]):
         for kw in keywords:
-            results = search_arxiv(query=kw, max_results=1)
-            for r in results:
-                titre = r["title"]
-                st.session_state["tendances"][secteur].append(f"📚 {titre}")
+            # Recherche Arxiv
+            articles = search_arxiv(query=kw, max_results=1)
+            for article in articles:
+                st.session_state["tendances"][secteur].append(f"📘 {article['title']}")
 
     for secteur, keywords in mots_cles.items():
         for kw in keywords:
@@ -179,11 +179,11 @@ def afficher_graphiques_secteur():
                 st.session_state["tendances"][secteur].append(f"🗞️ {article['title']}")
 
     # SerpAPI - Actualités récentes
- for secteur, keywords in zip(["Santé", "Finance"], [mots_cles()["Santé"], mots_cles()["Finance"]]):
+    for secteur, keywords in zip(["Santé", "Finance"], [mots_cles()["Santé"], mots_cles()["Finance"]]):
         for kw in keywords:
-            news = get_google_news(kw, serpapi_key)
-            for article in news[:1]:
-                st.session_state["tendances"][secteur].append(f"🗞️ {article['title']}")
+            news = get_google_news(kw, serpapi_key, max_results=1)
+            for item in news:
+                st.session_state["tendances"][secteur].append(f"🗞️ {item['title']}")
 
 # Initialisation des tendances à la 1re ouverture
 if "tendances" not in st.session_state
