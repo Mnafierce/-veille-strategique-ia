@@ -146,10 +146,10 @@ notion_db = os.getenv("NOTION_DB_ID")
     # Arxiv
     for secteur, keywords in zip(["Santé", "Finance"], [mots_cles_sante, mots_cles_finance]):
         for kw in keywords:
-            results = search_arxiv(query=kw, max_results=1)
+                results = search_arxiv(query=kw, max_results=1)
             for r in results:
-                titre = r["title"]
-                st.session_state["tendances"][secteur].append(f"📚 {titre}")
+                    titre = r["title"]
+                    st.session_state["tendances"][secteur].append(f"📚 {titre}")
 
     # Google News
     for secteur, keywords in zip(["Santé", "Finance"], [mots_cles_sante, mots_cles_finance]):
