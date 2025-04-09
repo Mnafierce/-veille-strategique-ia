@@ -72,10 +72,10 @@ threading.Thread(target=schedule_job, daemon=True).start()
 def update_tendances():
     st.session_state["tendances"] = {"Santé": [], "Finance": []}
 
-def mots_cles = {
+def mots_cles (): 
         "Santé": ["healthcare AI", "medical agents", "AI diagnosis", "AI patient care"],
         "Finance": ["AI investment", "AI in banking", "fraud detection AI", "autonomous financial agents"]
-    }
+
 for secteur, keywords in mots_cles.items():
     st.header("📡 Tendances par secteur – Santé & Finance")
 
