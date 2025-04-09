@@ -201,8 +201,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-if st.sidebar.button("🔄 Mettre à jour les tendances maintenant")
-   
+if st.sidebar.button("🔄 Mettre à jour les tendances maintenant"):
+    update_tendances()
     st.sidebar.success("Tendances mises à jour !")
 
 st.title("🧠 AgentWatch AI – Veille Stratégique IA")
