@@ -11,6 +11,11 @@ import schedule
 import threading
 import time
 from dotenv import load_dotenv
+import os
+
+# Charger .env
+load_dotenv()
+serpapi_key = os.getenv("SERPAPI_KEY")
 from notion_client import Client
 
 st.set_page_config(page_title="AgentWatch AI", layout="wide", page_icon="🤖")
