@@ -1,36 +1,27 @@
 import streamlit as st
 from datetime import datetime
-import feedparser
-import pdfkit
 import os
+import feedparser
 import requests
 import urllib.parse
-import plotly.express as px
 import pandas as pd
+import pdfkit
+import plotly.express as px
 import schedule
 import threading
 import time
 from dotenv import load_dotenv
-import os
-
-# Charger .env
-load_dotenv()
-serpapi_key = os.getenv("SERPAPI_KEY")
 from notion_client import Client
 
 st.set_page_config(page_title="AgentWatch AI", layout="wide", page_icon="🤖")
-st.markdown("""
-    <style>
-        .main {background-color: #f4f6f9;}
-        h1, h2, h3 {color: #032D60;}
-        .stButton>button {background-color: #00A1E0; color: white;}
-    </style>
-""", unsafe_allow_html=True)
 
-st.title("🧠 AgentWatch AI – Veille Stratégique IA")
-st.markdown("**Analyse continue des avancées technologiques IA dans la santé et la finance.**")
+# 🔐 Variables d'environnement
+load_dotenv()
+serpapi_key = os.getenv("SERPAPI_KEY")
+notion_token = os.getenv("NOTION_TOKEN")
+notion_db = os.getenv("NOTION_DB_ID")
 
-# 🔎 Arxiv
+
 def search_arxiv(query="autonomous AI agents", max_results=5, days=7):
     base_url = "http://export.arxiv.org/api/query?"
     encoded_query = urllib.parse.quote(query)
@@ -51,6 +42,7 @@ def search_arxiv(query="autonomous AI agents", max_results=5, days=7):
             })
     return results
 
+
 def get_google_news(query, api_key, max_results=5):
     url = "https://serpapi.com/search"
     params = {
@@ -63,14 +55,23 @@ def get_google_news(query, api_key, max_results=5):
     response = requests.get(url, params=params)
     return response.json().get("news_results", []) if response.status_code == 200 else []
 
+def mots_cles():
+    return {
+        "Santé": ["healthcare AI", "medical agents", "AI diagnosis", "AI patient care"],
+        "Finance": ["AI investment", "AI in banking", "fraud detection AI", "autonomous financial agents"]
+    }
 
-def schedule_job():
-    schedule.every(24).hours.do(update_tendances)
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+def update_tendances():
+    st.session_state["tendances"] = {"Santé": [], "Finance": []}
+    for secteur, keywords in mots_cles().items():
+        for kw in keywords:
+            articles = search_arxiv(query=kw, max_results=1)
+            news = get_google_news(kw, serpapi_key, max_results=1)
 
-threading.Thread(target=schedule_job, daemon=True).start()
+            for article in articles:
+                st.session_state["tendances"][secteur].append(f"📘 {article['title']}")
+            for item in news:
+                st.session_state["tendances"][secteur].append(f"🗞️ {item['title']}")
 
 
 # Lancer une 1re mise à jour au démarrage
@@ -89,71 +90,21 @@ def mots_cles():
             "autonomous financial agents"
         ]
     }
-def update_tendances():
-    st.session_state["tendances"] = {"Santé": [], "Finance": []}
 
-    for secteur, keywords in mots_cles().items():
-        for kw in keywords:
-            # Arxiv
-            articles = search_arxiv(query=kw, max_results=1)
-            for article in articles:
-                st.session_state["tendances"][secteur].append(f"📘 {article['title']}")
+def schedule_job():
+    schedule.every(24).hours.do(update_tendances)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
-            # Google News
-            news = get_google_news(kw, serpapi_key, max_results=1)
-            for item in news:
-                st.session_state["tendances"][secteur].append(f"🗞️ {item['title']}")
+threading.Thread(target=schedule_job, daemon=True).start()
+
 if "tendances" not in st.session_state:
     update_tendances()
 
-st.header("📡 Tendances IA par secteur – Santé & Finance")
-col1, col2 = st.columns(2)
+st.title("🧠 AgentWatch AI – Veille Stratégique IA")
+st.markdown("**Analyse continue des avancées technologiques IA dans la santé et la finance.**")
 
-with col1:
-    st.subheader("🏥 Santé")
-    for ligne in st.session_state["tendances"]["Santé"]:
-        st.markdown(f"- {ligne}")
-
-with col2:
-    st.subheader("💰 Finance")
-    for ligne in st.session_state["tendances"]["Finance"]:
-        st.markdown(f"- {ligne}")
-
-if st.sidebar.button("🔄 Mettre à jour les tendances maintenant"):
-    update_tendances()
-    st.sidebar.success("Tendances mises à jour ✅")
-
-    # Arxiv - Recherches scientifiques
-    for secteur, keywords in zip(["Santé", "Finance"], [mots_cles_sante, mots_cles_finance]):
-        for kw in keywords:
-            results = search_arxiv(query=kw, max_results=1)
-            for r in results:
-                titre = r["title"]
-                st.session_state["tendances"][secteur].append(f"📚 {titre}")
-
-    for secteur, keywords in mots_cles.items():
-        for kw in keywords:
-            for result in search_arxiv(kw, max_results=1):
-                st.session_state["tendances"][secteur].append(f"📚 {result['title']}")
-            for article in get_google_news(kw, serpapi_key, max_results=1):
-                st.session_state["tendances"][secteur].append(f"🗞️ {article['title']}")
-
-    # SerpAPI - Actualités récentes
-    for secteur, keywords in zip(["Santé", "Finance"], [mots_cles_sante, mots_cles_finance]):
-        for kw in keywords:
-            news = get_google_news(kw, serpapi_key)
-            for article in news[:1]:
-                st.session_state["tendances"][secteur].append(f"🗞️ {article['title']}")
-
-# Initialisation des tendances à la 1re ouverture
-if "tendances" not in st.session_state:
-    update_tendances()
-
-# Met à jour au démarrage si non encore chargé
-if "tendances" not in st.session_state:
-    update_tendances()
-
-st.set_page_config(page_title="AgentWatch AI", layout="wide", page_icon="🤖")
 st.markdown("""
     <style>
         .main {background-color: #f4f6f9;}
@@ -162,40 +113,10 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-if st.sidebar.button("🔄 Mettre à jour les tendances maintenant"):
-    update_tendances()
-    st.sidebar.success("Tendances mises à jour !")
-
-st.title("🧠 AgentWatch AI – Veille Stratégique IA")
-st.markdown("**Analyse des avancées en agents IA autonomes dans la santé et la finance.**")
-
-# 🔐 Charger les variables d'environnement
-load_dotenv()
-serpapi_key = os.getenv("SERPAPI_KEY")
-notion_token = os.getenv("NOTION_TOKEN")
-notion_db = os.getenv("NOTION_DB_ID")
-
-    # Arxiv
-for secteur, keywords in zip(["Santé", "Finance"], [mots_cles_sante, mots_cles_finance]):
-    for kw in keywords: 
-        results = search_arxiv(query=kw, max_results=1)
-    for r in results:
-                titre = r["title"]
-st.session_state["tendances"][secteur].append(f"📚 {titre}")
-
-    # Google News
-for secteur, keywords in zip(["Santé", "Finance"], [mots_cles_sante, mots_cles_finance]):
-    for kw in keywords:
-            news = get_google_news(kw, serpapi_key)
-    for article in news[:1]:
-        st.session_state["tendances"][secteur].append(f"🗞️ {article['title']}")
-
-if "tendances" not in st.session_state:
-    update_tendances()
-
-# Filtre utilisateur (sidebar)
 st.sidebar.header("🎛️ Filtres")
+
 generate = st.sidebar.button("📊 Générer le rapport stratégique")
+
 if st.sidebar.button("🔄 Mettre à jour les tendances maintenant"):
     update_tendances()
     st.sidebar.success("✅ Tendances actualisées")
@@ -211,32 +132,104 @@ search_keyword = st.sidebar.text_input("🔍 Recherche libre", value="autonomous
 
 st.sidebar.markdown(f"📅 **Dernière mise à jour :** {datetime.now().strftime('%d %B %Y')}")
 
-update = st.sidebar.button("🔄 Mettre à jour les infos")
-
-
-   # 📡 Tendances dynamiques affichées à l'écran
-st.header("📡 Tendances par secteur – Santé & Finance")
-
+st.header("📡 Tendances IA par secteur – Santé & Finance")
 col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("🏥 Santé")
-    for item in tendances["sante"]:
-        titre = item.get("title") or item.get("title", "Sans titre")
-        lien = item.get("link") or "#"
-        st.markdown(f"📌 [{titre}]({lien})")
+    for ligne in st.session_state["tendances"]["Santé"]:
+        st.markdown(f"- {ligne}")
 
 with col2:
     st.subheader("💰 Finance")
-    for item in tendances["finance"]:
-        titre = item.get("title") or item.get("title", "Sans titre")
-        lien = item.get("link") or "#"
-        st.markdown(f"📌 [{titre}]({lien})")
+    for ligne in st.session_state["tendances"]["Finance"]:
+        st.markdown(f"- {ligne}")
 
-st.caption(f"⏱ Données actualisées le : {tendances['last_update']}")
+def afficher_graphiques_secteur():
+    st.subheader("📈 Statistiques par secteur")
+    df = pd.DataFrame({
+        "Mois": ["Jan", "Fév", "Mars", "Avr"],
+        "Santé": [10, 14, 18, 22],
+        "Finance": [8, 10, 14, 19]
+    })
+    fig = px.line(df, x="Mois", y=["Santé", "Finance"], title="Évolution des projets IA", markers=True)
+    st.plotly_chart(fig, use_container_width=True)
+
+    pie = px.pie(
+        names=["Agent diagnostic", "NLP", "Support client", "Investissement", "Prévision"], 
+        values=[20, 25, 15, 30, 10],
+        title="Répartition des types d’agents IA observés"
+    )
+    st.plotly_chart(pie, use_container_width=True)
+
+
+    # Arxiv - Recherches scientifiques
+   for secteur, keywords in zip(["Santé", "Finance"], [mots_cles()["Santé"], mots_cles()["Finance"]]):
+        for kw in keywords:
+            results = search_arxiv(query=kw, max_results=1)
+            for r in results:
+                titre = r["title"]
+                st.session_state["tendances"][secteur].append(f"📚 {titre}")
+
+    for secteur, keywords in mots_cles.items():
+        for kw in keywords:
+            for result in search_arxiv(kw, max_results=1):
+                st.session_state["tendances"][secteur].append(f"📚 {result['title']}")
+            for article in get_google_news(kw, serpapi_key, max_results=1):
+                st.session_state["tendances"][secteur].append(f"🗞️ {article['title']}")
+
+    # SerpAPI - Actualités récentes
+ for secteur, keywords in zip(["Santé", "Finance"], [mots_cles()["Santé"], mots_cles()["Finance"]]):
+        for kw in keywords:
+            news = get_google_news(kw, serpapi_key)
+            for article in news[:1]:
+                st.session_state["tendances"][secteur].append(f"🗞️ {article['title']}")
+
+# Initialisation des tendances à la 1re ouverture
+if "tendances" not in st.session_state
+
+
+# Met à jour au démarrage si non encore chargé
+if "tendances" not in st.session_state
+
+
+st.markdown("""
+    <style>
+        .main {background-color: #f4f6f9;}
+        h1, h2, h3 {color: #032D60;}
+        .stButton>button {background-color: #00A1E0; color: white;}
+    </style>
+""", unsafe_allow_html=True)
+
+if st.sidebar.button("🔄 Mettre à jour les tendances maintenant")
+   
+    st.sidebar.success("Tendances mises à jour !")
+
+st.title("🧠 AgentWatch AI – Veille Stratégique IA")
+st.markdown("**Analyse des avancées en agents IA autonomes dans la santé et la finance.**")
+
+    # Arxiv
+for secteur, keywords in zip(["Santé", "Finance"], [mots_cles()["Santé"], mots_cles()["Finance"]]):
+    for kw in keywords: 
+        results = search_arxiv(query=kw, max_results=1)
+    for r in results:
+                titre = r["title"]
+st.session_state["tendances"][secteur].append(f"📚 {titre}")
+
+    # Google News
+for secteur, keywords in zip(["Santé", "Finance"], [mots_cles()["Santé"], mots_cles()["Finance"]]):
+    for kw in keywords:
+            news = get_google_news(kw, serpapi_key)
+    for article in news[:1]:
+        st.session_state["tendances"][secteur].append(f"🗞️ {article['title']}")
+
+if "tendances" not in st.session_state:
+    update_tendances()
+
+
 
 # 🧠 Recommandation stratégique Salesforce
-def analyse_salesforce(secteur, entreprise, insights, articles, news):
+def analyse_salesforce(secteur, insights, articles, news):
     st.markdown("### 🧠 Recommandation stratégique Salesforce")
     recommandations = []
 
@@ -245,7 +238,7 @@ def analyse_salesforce(secteur, entreprise, insights, articles, news):
             recommandations.append("Déployer un agent IA dans Salesforce HealthCloud.")
         if secteur == "Finance" and "portefeuille" in insight.lower():
             recommandations.append("Intégrer un assistant IA dans Financial Services Cloud.")
-        if "fraude" in insight_lower:
+        if "fraude" in insight.lower():
             recommandations.append("Utiliser Einstein GPT pour la détection intelligente de fraude.")
 
     for article in articles:
@@ -411,11 +404,6 @@ if update:
     query = f"{selected_entreprise} {selected_secteur} autonomous agents"
     articles = search_arxiv(query=query)
 
-if update:
-    st.header("📰 Recherches scientifiques (Arxiv)")
-    query = f"{selected_entreprise} {selected_secteur} autonomous agents"
-    articles = search_arxiv(query)
-
     if articles:
         for article in articles:
             st.markdown(f"### [{article['title']}]({article['link']})")
@@ -463,16 +451,6 @@ def afficher_graphiques_secteur():
                 "✅ Automatiser la détection de risque avec des agents LLM",
                 "✅ Évaluer l’impact réglementaire des IA autonomes"
             ],
-            "Retail": [
-                "✅ Déployer un agent IA prédictif sur les tendances d’achat",
-                "✅ Analyser les comportements clients pour la personnalisation",
-                "✅ Former les équipes CRM aux outils augmentés IA"
-            ],
-            "Éducation": [
-                "✅ Lancer un chatbot IA pour suivi étudiant",
-                "✅ Partenariat EdTech pour apprentissage personnalisé",
-                "✅ Suivi des progrès en temps réel pour les enseignants"
-            ]
     }
     for action in actions.get(secteur, ["⚠️ Analyse IA stratégique en cours."]):
         st.markdown(action)
@@ -516,43 +494,54 @@ if note_entreprise:
 st.markdown(f"🕒 Rapport généré le : **{datetime.now().strftime('%d %B %Y')}**")
 
 # 📤 Export PDF sécurisé
-def export_pdf(secteur, entreprise, insights):
+def export_pdf(secteur, pays, entreprise, insights, note_pays, note_entreprise):
+    html = f"""
+    <html><head><meta charset='UTF-8'></head><body>
+    <h1>Rapport de veille stratégique IA</h1>
+    <hr>
+    <p><strong>Secteur :</strong> {secteur}</p>
+    <p><strong>Pays :</strong> {pays}</p>
+    <p><strong>Entreprise :</strong> {entreprise}</p>
+    <p><strong>Date :</strong> {datetime.now().strftime('%d %B %Y')}</p>
+    <h2>🧠 Informations clés :</h2>
+    <ul>{''.join(f"<li>{i}</li>" for i in insights)}</ul>
+    <p>{note_pays}</p>
+    <p>{note_entreprise}</p>
+    </body></html>
+    """
     try:
-        html = f"""
-        <html><head><meta charset='UTF-8'></head><body>
-        <h1>Rapport Stratégique IA</h1>
-        <p><strong>Secteur :</strong> {secteur}</p>
-        <p><strong>Entreprise :</strong> {entreprise}</p>
-        <p><strong>Date :</strong> {datetime.now().strftime('%d %B %Y')}</p>
-        <ul>{''.join(f"<li>{i}</li>" for i in insights)}</ul>
-        </body></html>
-        """
         pdfkit.from_string(html, "rapport_ia.pdf")
         with open("rapport_ia.pdf", "rb") as f:
-            st.download_button("📥 Télécharger le rapport PDF", f, file_name="rapport_ia.pdf")
+            st.download_button(
+                "📥 Télécharger le PDF",
+                f,
+                file_name=f"rapport_ia_{entreprise}_{datetime.now().strftime('%Y%m%d')}.pdf"
+            )
     except OSError:
-        st.error("❌ wkhtmltopdf non trouvé.")
+        st.error("❌ Erreur : wkhtmltopdf n’est pas installé ou mal configuré.")
 
 
-# 🗃️ Enregistrement dans Notion
-def enregistrer_dans_notion(titre, contenu, secteur, entreprise):
-    if not notion_token or not notion_db:
-        st.warning("⚠️ Configuration Notion manquante.")
-        return
-
-    notion = Client(auth=notion_token)
-    notion.pages.create(
-        parent={"database_id": notion_db},
-        properties={
-            "Nom": {"title": [{"text": {"content": titre}}]},
-            "Secteur": {"rich_text": [{"text": {"content": secteur}}]},
-            "Entreprise": {"rich_text": [{"text": {"content": entreprise}}]},
-            "Date": {"date": {"start": datetime.now().isoformat()}}
-        },
-        children=[{
-            "object": "block", "type": "paragraph",
-            "paragraph": {"text": [{"type": "text", "text": {"content": contenu}}]}
-        }]
+# 📤 Bouton d’export PDF (si entreprise sélectionnée)
+if selected_entreprise != "Toutes":
+    st.subheader("📤 Export du rapport")
+    if st.button("Générer et Télécharger le PDF"):
+        export_pdf(
+            selected_secteur,
+            selected_pays,
+            selected_entreprise,
+            insights,
+            note_pays,
+            note_entreprise
+        )
+# 🗃️ Bouton d'enregistrement dans Notion
+if st.button("🗃 Enregistrer dans Notion"):
+    contenu = f"Insights : {' | '.join(insights)}\n\n{note_pays}\n{note_entreprise}"
+    enregistrer_dans_notion(
+        titre="Rapport IA – " + selected_entreprise,
+        contenu=contenu,
+        secteur=selected_secteur,
+        pays=selected_pays,
+        entreprise=selected_entreprise
     )
 
 # ▶️ Lancement du rapport stratégique
