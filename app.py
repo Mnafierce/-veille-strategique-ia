@@ -115,9 +115,9 @@ st.markdown("""
 
 st.sidebar.header("🎛️ Filtres")
 
-generate = st.sidebar.button("📊 Générer le rapport stratégique")
+generate = st.sidebar.button("📊 Générer le rapport stratégique", key="generate_report")
 
-if st.sidebar.button("🔄 Mettre à jour les tendances maintenant"):
+if st.sidebar.button("🔄 Mettre à jour les tendances maintenant", key="update_sidebar_button"):
     update_tendances()
     st.sidebar.success("✅ Tendances actualisées")
 
@@ -201,9 +201,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-if st.sidebar.button("🔄 Mettre à jour les tendances maintenant"):
+if st.sidebar.button("🔄 Mettre à jour les tendances maintenant", key="update_sidebar_button"):
     update_tendances()
-    st.sidebar.success("Tendances mises à jour !")
+    st.sidebar.success("✅ Tendances actualisées")
 
 st.title("🧠 AgentWatch AI – Veille Stratégique IA")
 st.markdown("**Analyse des avancées en agents IA autonomes dans la santé et la finance.**")
@@ -524,17 +524,17 @@ def export_pdf(secteur, pays, entreprise, insights, note_pays, note_entreprise):
 # 📤 Bouton d’export PDF (si entreprise sélectionnée)
 if selected_entreprise != "Toutes":
     st.subheader("📤 Export du rapport")
-    if st.button("Générer et Télécharger le PDF"):
-        export_pdf(
-            selected_secteur,
-            selected_pays,
-            selected_entreprise,
-            insights,
-            note_pays,
-            note_entreprise
-        )
+    if st.button("📤 Exporter ce rapport en PDF", key="export_pdf_button"):
+    export_pdf(
+        selected_secteur,
+        selected_pays,
+        selected_entreprise,
+        insights,
+        note_pays,
+        note_entreprise
+    )
 # 🗃️ Bouton d'enregistrement dans Notion
-if st.button("🗃 Enregistrer dans Notion"):
+if st.button("🗃 Enregistrer dans Notion", key="notion_save_button"):
     contenu = f"Insights : {' | '.join(insights)}\n\n{note_pays}\n{note_entreprise}"
     enregistrer_dans_notion(
         titre="Rapport IA – " + selected_entreprise,
