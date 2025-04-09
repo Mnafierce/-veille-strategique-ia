@@ -201,7 +201,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-if st.sidebar.button("🔄 Mettre à jour les tendances maintenant", key="update_sidebar_button"):
+if st.sidebar.button("🔄 Mettre à jour les tendances maintenant", key="update_sidebar_button_1"):
     update_tendances()
     st.sidebar.success("✅ Tendances actualisées")
 
@@ -524,7 +524,7 @@ def export_pdf(secteur, pays, entreprise, insights, note_pays, note_entreprise):
 # 📤 Bouton d’export PDF (si entreprise sélectionnée)
 if selected_entreprise != "Toutes":
     st.subheader("📤 Export du rapport")
-    if st.button("📤 Exporter ce rapport en PDF", key="export_pdf_button"):
+    if st.button("📤 Exporter ce rapport en PDF", key="export_pdf_button_sidebar"):
         export_pdf(
             selected_secteur,
             selected_pays,
@@ -533,6 +533,7 @@ if selected_entreprise != "Toutes":
             note_pays,
             note_entreprise
         )
+
 
 # 🗃️ Bouton d'enregistrement dans Notion
 if st.button("🗃 Enregistrer dans Notion", key="notion_save_button"):
