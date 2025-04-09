@@ -126,7 +126,7 @@ if st.sidebar.button("🔄 Mettre à jour les tendances maintenant"):
                 titre = r["title"]
                 st.session_state["tendances"][secteur].append(f"📚 {titre}")
 
-        for secteur, keywords in mots_cles.items():
+    for secteur, keywords in mots_cles.items():
         for kw in keywords:
             for result in search_arxiv(kw, max_results=1):
                 st.session_state["tendances"][secteur].append(f"📚 {result['title']}")
