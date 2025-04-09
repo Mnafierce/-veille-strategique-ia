@@ -78,7 +78,7 @@ def update_tendances():
     }
 for secteur, keywords in mots_cles.items():
     st.header("📡 Tendances par secteur – Santé & Finance")
-    
+
 col1, col2 = st.columns(2)
 
 with col1:
@@ -143,18 +143,18 @@ notion_token = os.getenv("NOTION_TOKEN")
 notion_db = os.getenv("NOTION_DB_ID")
 
     # Arxiv
-    for secteur, keywords in zip(["Santé", "Finance"], [mots_cles_sante, mots_cles_finance]):
-        for kw in keywords:
+for secteur, keywords in zip(["Santé", "Finance"], [mots_cles_sante, mots_cles_finance]):
+    for kw in keywords:
                 results = search_arxiv(query=kw, max_results=1)
-            for r in results:
+        for r in results:
                     titre = r["title"]
                     st.session_state["tendances"][secteur].append(f"📚 {titre}")
 
     # Google News
-    for secteur, keywords in zip(["Santé", "Finance"], [mots_cles_sante, mots_cles_finance]):
-        for kw in keywords:
+for secteur, keywords in zip(["Santé", "Finance"], [mots_cles_sante, mots_cles_finance]):
+    for kw in keywords:
             news = get_google_news(kw, serpapi_key)
-            for article in news[:1]:
+        for article in news[:1]:
                 st.session_state["tendances"][secteur].append(f"🗞️ {article['title']}")
 
 if "tendances" not in st.session_state:
