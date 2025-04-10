@@ -1,34 +1,35 @@
-# -veille-strategique-ia
-Prototype d’outil de veille stratégique sur les agents IA
-# 🧠 AgentWatch AI – Veille stratégique IA
+# 🧠 AgentWatch AI – Veille Stratégique IA
 
-**AgentWatch AI** est une plateforme de veille stratégique spécialisée dans l’analyse des avancées en agents d’intelligence artificielle externes, avec un focus sur les secteurs :
-- 💰 Finance
-- 🏥 Santé
-- 💡 Technologie
+**AgentWatch AI** est un tableau de bord interactif propulsé par Streamlit qui offre une veille stratégique quotidienne dans les secteurs **Santé** et **Finance**, axée sur :
 
-Elle fournit :
-- 📚 Études scientifiques (arXiv, PubMed)
-- 🗞️ Actualités en temps réel (Google News via SerpAPI)
-- 📈 Visualisations sectorielles (Plotly)
-- 🧠 Analyse stratégique automatisée
-- 📤 Export PDF + 📚 Archivage dans Notion
+- Les agents IA autonomes
+- L’évolution des technologies émergentes
+- Les avancées scientifiques et actualités économiques
+- L'analyse des concurrents et opportunités d'intégration IA
 
----
+## 🚀 Fonctionnalités principales
 
-## 🔧 Technologies
-- `Streamlit` (interface web)
-- `feedparser` (Arxiv API)
-- `requests` (API REST PubMed / SerpAPI)
-- `notion-client` (stockage dans Notion)
-- `plotly` (graphiques dynamiques)
-- `pdfkit` (export PDF)
+- 📡 **Analyse automatique** (mise à jour toutes les 24h)
+- 🔍 **Recherche manuelle** personnalisable (secteur, entreprise, pays, mots-clés)
+- 🧠 **Synthèse exécutive enrichie par GPT-4**
+- 📈 **Graphiques dynamiques et recommandations Salesforce**
+- 🌐 Intégrations : Arxiv, Google News, Google Trends, GPT-4, Perplexity.ai
 
----
+## 🧩 Technologies utilisées
 
-## ▶️ Utilisation
+- Python 3.10+
+- Streamlit
+- OpenAI API (GPT-4)
+- SerpAPI
+- Notion SDK (optionnel)
+- Google Trends API via `pytrends`
 
-1. Cloner ce repo  
-   ```bash
-   git clone https://github.com/TON-UTILISATEUR/veille-strategique-ia.git
-   cd veille-strategique-ia
+## 🛠 Installation locale
+
+```bash
+git clone https://github.com/ton-repo/agentwatch-ai.git
+cd agentwatch-ai
+python -m venv .venv
+source .venv/bin/activate  # ou .venv\Scripts\activate sous Windows
+pip install -r requirements.txt
+
