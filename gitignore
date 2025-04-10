@@ -1,0 +1,32 @@
+# === Python cache files ===
+__pycache__/
+*.py[cod]
+*.so
+
+# === Environnements virtuels ===
+.venv/
+env/
+venv/
+
+# === Configuration et secrets ===
+.env
+.secrets
+streamlit_app/.streamlit/secrets.toml
+
+# === VSCode settings ===
+.vscode/
+
+# === Jupyter notebook checkpoints ===
+.ipynb_checkpoints/
+
+# === Notion tokens ou exports temporaires ===
+notion_export/
+notion_cache/
+
+# === PDF ou rapports générés ===
+*.pdf
+rapport_*.pdf
+
+# === OS files ===
+.DS_Store
+Thumbs.db
